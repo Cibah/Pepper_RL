@@ -1,1 +1,2 @@
-# Pepper_RL
+# Reinforcement Learning für Pepper
+
