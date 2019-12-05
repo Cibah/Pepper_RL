@@ -1,4 +1,5 @@
-# Reinforcement Learning für Pepper
+# Reinforcement Learning für PEPPER
 
-Object tracker:
-https://www.pyimagesearch.com/2015/09/21/opencv-track-object-movement/
+
+## pepper - API zur Steuerung für PEPPER
+## ddpg - Policy Algorithmus für das Lernen
