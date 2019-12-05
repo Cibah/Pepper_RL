@@ -1,4 +1,4 @@
-Beispiel ddpg mit Pendulum environment[DDPG](https://pemami4911.github.io/blog/2016/08/21/ddpg-rl.html)
+[Beispiel ddpg mit Pendulum environment](https://pemami4911.github.io/blog/2016/08/21/ddpg-rl.html)
 
 ## Dependecies for ddpg:
 
