@@ -7,10 +7,10 @@ import sys
 ip = "192.168.0.40"
 port = "9559"
 STORED_VALUES = dict()
-MOTORS = ["LElbowRoll", "RElbowRoll", "LElbowYaw", "RWristYaw"
-          "RElbowYaw", "LShoulderPitch", "RShoulderPitch", "LShoulderRoll", "RShoulderRoll"]
+MOTOR = ["LElbowRoll", "RElbowRoll", "LElbowYaw", "RElbowYaw", "RWristYaw", "LWristYaw",
+         "LShoulderPitch", "RShoulderPitch", "LShoulderRoll", "RShoulderRoll"]
+MOTOR_SIZE = len(MOTOR)
 session = qi.Session()
-#service = None
 
 
 def init():
@@ -22,7 +22,7 @@ def init():
     return service
 
 
-def checkMovement(movements):
+def checkmovement(movements):
     # Check if the new movement is correct with its values.
     # Is the motor name correct?
     # Whats the difference between the old and new value?
@@ -30,41 +30,54 @@ def checkMovement(movements):
     #
     print("Checking Movements")
 
-    for motor in movements:
-        print(motor)
-        if motor not in MOTORS:
+    for movement in movements:
+        # Check if the motor exists?
+        if movement[0] > MOTOR_SIZE or movement[0] < 0:
             return False
-        if motor in STORED_VALUES:
-            delta = abs(STORED_VALUES[motor][0] - movements[motor][0])
+        # check if the delta to the last movement is not too high: 10 degree
+        if movement[0] in STORED_VALUES:
+            delta = abs(STORED_VALUES[movement[0]]
+                        [0] - movements[movement[0]][0])
             if delta >= 10:
                 return False
     return True
 
 
 def move(movements, service):
-    if (not checkMovement(movements)):
+    if (not checkmovement(movements)):
         return -1  # Bad Reward
     try:
-        names = list()
-        times = list()
-        keys = list()
+        # The lists for sending to the robot
+        names = list()  # motors list
+        times = list()  # speed list
+        keys = list()  # angle list
         for parm in movements:
-            names.append(str(parm))
-            keys.append(float(movements[parm][0]))
-            # time is thee duration of the movement
-            times.append(float(movements[parm][1]))
-            print("Moving: " + parm + " with: " +
-                  str(movements[parm][0]) + " in " + str(movements[parm][1]))
-            STORED_VALUES[parm] = [movements[parm][0], movements[parm][1]]
+
+            names.append(str(MOTOR[parm[0]]))
+            keys.append(float(parm[1]))
+            times.append(float(parm[2]))
+
+            print("Moving: " + MOTOR[parm[0]] + " with: " +
+                  str(parm[1]) + " in " + str(parm[2]))
+            STORED_VALUES[parm[0]] = [parm[0], parm[1]]
+
+        print((names))
+        print((keys))
+        print((times))
+
         service.angleInterpolation(names, keys, times, True)
-        return 0  # No Reward at all
+        #service.angleInterpolation("LElbowYaw", keys, times, True)
+        return 0  # No Reward at all or give some reward if the movement was correct?
     except:
         print("FAILED: %s", sys.exc_info()[0])
 
 
 s = init()
-params = dict()
-params["LElbowRoll"] = [-1.2, 0.2]
-params["RElbowRoll"] = [1.2, 0.2]
-move(params, s)
 
+args = []
+# MotorID, Angle, Time
+args.append([1, 1.2, 0.2])
+args.append([0, -1.2, 0.2])
+
+print(args)
+move(args, s)
