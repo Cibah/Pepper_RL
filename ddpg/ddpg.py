@@ -34,9 +34,9 @@ class ActorNetwork(object):
 
     def __init__(self, sess, state_dim, action_dim, action_bound, learning_rate, tau, batch_size):
         self.sess = sess
-        self.s_dim = state_dim
-        self.a_dim = action_dim
-        self.action_bound = action_bound
+        self.s_dim = state_dim # Winkelmotoren+ kamera
+        self.a_dim = action_dim # Anzahl Motoren z.B. 10
+        self.action_bound = action_bound # Grenze Winkelbewegung z.B. +5 
         self.learning_rate = learning_rate
         self.tau = tau
         self.batch_size = batch_size
@@ -285,13 +285,21 @@ def train(sess, env, args, actor, critic, actor_noise):
 
             # Added exploration noise
             #a = actor.predict(np.reshape(s, (1, 3))) + (1. / (1. + i))
-            a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
+           
+            #COLLECT DATA FROM PEPPER FOR SAMPLING: state(Motorenwinkel+Kamera x,y), reward, done=false, info..., Folgezustand= Nächster Batchmovebefehl+ Kamera
+            #WRITE DATA TO some training_file...
+            #READ DATA FROM training_file
+            for(sampled_data in training_file)
+                #ITERATE THORUGH SAMPLED DATA AND ADD TO REPLAY BUFFER
+                a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
 
-            s2, r, terminal, info = env.step(a[0])
+                s2, r, terminal, info = env.step(a[0])
 
-            replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
-                              terminal, np.reshape(s2, (actor.s_dim,)))
+                replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
+                                terminal, np.reshape(s2, (actor.s_dim,)))
 
+                #export actor Model somewhere
+                
             # Keep adding experience to the memory until
             # there are at least minibatch size samples
             if replay_buffer.size() > int(args['minibatch_size']):
