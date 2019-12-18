@@ -1,5 +1,5 @@
 # Choregraphe bezier export in Python.
-from naoqi import ALProxy
+#from naoqi import ALProxy
 import qi
 import time
 import sys
@@ -7,9 +7,8 @@ import sys
 ip = "192.168.0.40"
 port = "9559"
 STORED_VALUES = dict()
-MOTOR = ["LElbowRoll", "RElbowRoll", "LElbowYaw", "RElbowYaw", "RWristYaw", "LWristYaw",
-         "LShoulderPitch", "RShoulderPitch", "LShoulderRoll", "RShoulderRoll"]
-MOTOR_SIZE = len(MOTOR)
+MOTORS = ["LElbowRoll", "RElbowRoll", "LElbowYaw","LWristYaw", "RWristYaw"
+          "RElbowYaw", "LShoulderPitch", "RShoulderPitch", "LShoulderRoll", "RShoulderRoll", "LHand", "RHand"]
 session = qi.Session()
 
 
@@ -22,7 +21,7 @@ def init():
     return service
 
 
-def checkmovement(movements):
+def checkMovement(movements):
     # Check if the new movement is correct with its values.
     # Is the motor name correct?
     # Whats the difference between the old and new value?
@@ -30,54 +29,62 @@ def checkmovement(movements):
     #
     print("Checking Movements")
 
-    for movement in movements:
-        # Check if the motor exists?
-        if movement[0] > MOTOR_SIZE or movement[0] < 0:
-            return False
-        # check if the delta to the last movement is not too high: 10 degree
-        if movement[0] in STORED_VALUES:
-            delta = abs(STORED_VALUES[movement[0]]
-                        [0] - movements[movement[0]][0])
+    for motor in movements:
+        print(motor)
+        if motor not in MOTORS:
+            print("Error in check: Motor <" + motor + "> not found")
+            #return False
+        if motor in STORED_VALUES:
+            delta = abs(STORED_VALUES[motor][0] - movements[motor][0])
             if delta >= 10:
+                print("Error in check: delta too high: " + delta)
                 return False
     return True
 
 
 def move(movements, service):
-    if (not checkmovement(movements)):
+    if (not checkMovement(movements)):
         return -1  # Bad Reward
     try:
-        # The lists for sending to the robot
-        names = list()  # motors list
-        times = list()  # speed list
-        keys = list()  # angle list
+        names = list()
+        times = list()
+        keys = list()
         for parm in movements:
-
-            names.append(str(MOTOR[parm[0]]))
-            keys.append(float(parm[1]))
-            times.append(float(parm[2]))
-
-            print("Moving: " + MOTOR[parm[0]] + " with: " +
-                  str(parm[1]) + " in " + str(parm[2]))
-            STORED_VALUES[parm[0]] = [parm[0], parm[1]]
-
-        print((names))
-        print((keys))
-        print((times))
-
+            names.append(str(parm))
+            keys.append(float(movements[parm][0]))
+            # time is thee duration of the movement
+            times.append(float(movements[parm][1]))
+            print("Moving: " + parm + " with: " +
+                  str(movements[parm][0]) + " in " + str(movements[parm][1]))
+            STORED_VALUES[parm] = [movements[parm][0], movements[parm][1]]
         service.angleInterpolation(names, keys, times, True)
-        #service.angleInterpolation("LElbowYaw", keys, times, True)
-        return 0  # No Reward at all or give some reward if the movement was correct?
+        return 0  # No Reward at all
     except:
         print("FAILED: %s", sys.exc_info()[0])
 
+def roboInit(service):
+    params = dict()
+
+    params["LShoulderPitch"] = [0.0872665, 0.96]
+    params["RShoulderPitch"] = [0.0872665, 0.96]
+
+    params["LHand"] = [0.88, 0.96]
+    params["RHand"] = [0.88, 0.96]
+
+    params["LWristYaw"] = [-1.309, 0.96]
+    params["RWristYaw"] = [1.309, 0.96]
+
+    params["LShoulderRoll"] = [0.10472, 0.96]
+    params["RShoulderRoll"] = [-0.10472, 0.96]
+    move(params, s)
+    try:
+        input("If the tablet is ready, press enter:\n")
+    except:
+        pass         
 
 s = init()
+roboInit(s)
+s.rest()
 
-args = []
-# MotorID, Angle, Time
-args.append([1, 1.2, 0.2])
-args.append([0, -1.2, 0.2])
 
-print(args)
-move(args, s)
+
