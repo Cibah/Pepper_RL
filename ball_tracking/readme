@@ -1,0 +1,43 @@
+# EC, Nov-2019
+# kleine OpenCV/Python-Applikation zur Erkennung von 2 farbigen
+# Objekten. Mißt den Abstand in einem eigenen Thread und stellt diesen zur 
+# Verfügung
+#
+# Version 1.0
+# Erweiterungen:
+- Umstellung auf abgeleitetes Thread-Objekt,
+- im conf-File kann angegeben werden, ob großes Object Ball oder Rechteck ist
+
+# Aufruf: 
+python testBallTracker.py --conf conf.json
+
+# Umgebung:
+OpenCV-Installation 4.x (vmtl. geht auch 3.x)
+python 3.5.x, am besten in eigener virt. Umgebung mit virtualenv.
+dort dann div. Python-Module installieren mit pip install <module>:
+imutils, commentjson, numpy
+USB-Camera muß als /dev/video0 angelegt/connected werden. Ggf. interne
+Notebook-Camera disconnecten. Ansonsten in rewardTracker das Cam-Device ändern
+
+# testBallTracker.py
+# kleine Test-Applikation, um die reward-Funktionalität des BallTrackers zu testen
+#
+
+# rewardTracker.py 
+# Klasse, die z.B. mit einer Kamera die aktuelle
+# Abweichung von der Zielvorgabe erfaßt und als "Reward" zur Verfügung stellt.
+# Sie nutzt dazu eine Instanz der Reward-Klasse, in die das aktuelle Ergebnis
+# geschrieben wird.
+# Bekommt args beim Anlegen, um auf command-line Argumente zuzugreifen
+
+# reward.py:
+# Klasse, um Reward-Daten zu erfassen und weiterzugeben
+# wird importiert von der Main-Appliukation und der rewardTracker Class
+#
+
+# conf.json
+# json-Datei mit Konfig-Parametern für Upper/Lower-Farbwerte von
+# Objekt 1 und Objekt 2, Minimal-Größen, Kamera-Parameter....
+# Object 1 kann entweder Ball oder Rechteck (d.h. Tablett-Fläche) sein
+
+

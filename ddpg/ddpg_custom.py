@@ -22,6 +22,14 @@ from replay_buffer import ReplayBuffer
 # ===========================
 #   Actor and Critic DNNs
 # ===========================
+class Rewards():
+	#x,y values from balltracker
+	delta=(0,0)
+
+	@staticmethod
+	def updateRewards(x):
+		delta=x
+
 
 class ActorNetwork(object):
     """
@@ -34,9 +42,9 @@ class ActorNetwork(object):
 
     def __init__(self, sess, state_dim, action_dim, action_bound, learning_rate, tau, batch_size):
         self.sess = sess
-        self.s_dim = state_dim # Winkelmotoren+ kamera
-        self.a_dim = action_dim # Anzahl Motoren z.B. 10
-        self.action_bound = action_bound # Grenze Winkelbewegung z.B. +5 
+        self.s_dim = state_dim
+        self.a_dim = action_dim
+        self.action_bound = action_bound
         self.learning_rate = learning_rate
         self.tau = tau
         self.batch_size = batch_size
@@ -251,7 +259,8 @@ def build_summaries():
 #   Agent Training
 # ===========================
 
-def train(sess, env, args, actor, critic, actor_noise):
+#removed env variable
+def train(sess, args, actor, critic, actor_noise):
 
     # Set up summary Ops
     summary_ops, summary_vars = build_summaries()
@@ -273,33 +282,30 @@ def train(sess, env, args, actor, critic, actor_noise):
 
     for i in range(int(args['max_episodes'])):
 
-        s = env.reset()
+	#TODO: Reset to 0-...
+        #s = env.reset()
 
         ep_reward = 0
         ep_ave_max_q = 0
 
         for j in range(int(args['max_episode_len'])):
-
-            if args['render_env']:
-                env.render()
+		
+	    #not needed
+            #if args['render_env']:
+            #    env.render()
 
             # Added exploration noise
             #a = actor.predict(np.reshape(s, (1, 3))) + (1. / (1. + i))
-           
-            #COLLECT DATA FROM PEPPER FOR SAMPLING: state(Motorenwinkel+Kamera x,y), reward, done=false, info..., Folgezustand= Nächster Batchmovebefehl+ Kamera
-            #WRITE DATA TO some training_file...
-            #READ DATA FROM training_file
-            for(sampled_data in training_file)
-                #ITERATE THORUGH SAMPLED DATA AND ADD TO REPLAY BUFFER
-                a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
+            a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
 
-                s2, r, terminal, info = env.step(a[0])
+            #s2, r, terminal, info = env.step(a[0])
+	    #perform an action from action_dim:
+	    s2, r, terminal, info = a[0]
 
-                replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
-                                terminal, np.reshape(s2, (actor.s_dim,)))
 
-                #export actor Model somewhere
-                
+            replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
+                              terminal, np.reshape(s2, (actor.s_dim,)))
+
             # Keep adding experience to the memory until
             # there are at least minibatch size samples
             if replay_buffer.size() > int(args['minibatch_size']):
@@ -352,14 +358,16 @@ def train(sess, env, args, actor, critic, actor_noise):
 def main(args):
 
     with tf.Session() as sess:
+	
+#        env = gym.make(args['env'])
+#        np.random.seed(int(args['random_seed']))
+#        tf.set_random_seed(int(args['random_seed']))
+#        env.seed(int(args['random_seed']))
 
-        env = gym.make(args['env'])
-        np.random.seed(int(args['random_seed']))
-        tf.set_random_seed(int(args['random_seed']))
-        env.seed(int(args['random_seed']))
-
-        state_dim = env.observation_space.shape[0]
-        action_dim = env.action_space.shape[0]
+#        state_dim = env.observation_space.shape[0]
+#        action_dim = env.action_space.shape[0]
+	state_dim = Rewards.delta
+	action_dim ="" #PEPPERAPI#
         action_bound = env.action_space.high
         # Ensure action bound is symmetric
         assert (env.action_space.high == -env.action_space.low)
@@ -375,17 +383,18 @@ def main(args):
         
         actor_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_dim))
 
-        if args['use_gym_monitor']:
-            if not args['render_env']:
-                env = wrappers.Monitor(
-                    env, args['monitor_dir'], video_callable=False, force=True)
-            else:
-                env = wrappers.Monitor(env, args['monitor_dir'], force=True)
+        #if args['use_gym_monitor']:
+         #   if not args['render_env']:
+          #      env = wrappers.Monitor(
+           #         env, args['monitor_dir'], video_callable=False, force=True)
+           # else:
+            #    env = wrappers.Monitor(env, args['monitor_dir'], force=True)
 
-        train(sess, env, args, actor, critic, actor_noise)
+	#removed env variable
+        train(sess, args, actor, critic, actor_noise)
 
-        if args['use_gym_monitor']:
-            env.monitor.close()
+        #if args['use_gym_monitor']:
+         #   env.monitor.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='provide arguments for DDPG agent')
