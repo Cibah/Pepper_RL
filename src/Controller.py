@@ -8,19 +8,17 @@ import sys			# used for exit()
 import signal			# to catch Ctrl-C Interrupt
 import readAngles
 import pepperMove
+import ballTracker
 
-ip = "192.168.0.40"
+
+ip = "192.168.0.41"
 port = "9559"
+
+# define little signal Handler to shutdown rewardTracker-Thread, when Main-Thread closes
+
 
 if __name__ == "__main__":
 
-    pepper = init(ip, port)
-    roboInit(pepper)
-    winkel = dict()
-
-    myReward = reward.Reward()
-
-    # construct the argument parse and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", "--video",
                     help="path to the (optional) video file")
@@ -29,38 +27,38 @@ if __name__ == "__main__":
     ap.add_argument("-c", "--conf", required=True,
                     help="path to the JSON configuration file")
     args = vars(ap.parse_args())
-    # filter warnings
-    warnings.filterwarnings("ignore")
+    event = threading.Event()
+    # Als Thread laufen lassen
+    myBallTrackerThread = ballTracker.BallTracker(args, event)
+    ballTracker.ballRunner()
 
-    event = threading.Event()  # used to stop trackingThread
-    myRewardTrackerThread = rewardTrackerThread.RewardTrackerThread(
-        myReward, args, event)
-    # nicht mehr noetig
-    # trackingThread = threading.Thread(target= myRewardTracker.run ) # , daemon= True)
-    # trackingThread.start()
-    myRewardTrackerThread.start()
-    winkel = readAngles(pepper)
-    delta = myReward.getDeltaIfNew()
+    session = pepperMove.init(ip, port)
+    pepperMove.roboInit(session)
+    winkel = dict()
+
+    myReward = reward.Reward()
+
+    winkel = readAngles.readAngles(session)
+    delta = ballTracker.delta
     # neues Delta 1x ausgeben
-    if delta is not None:
-        print ("Delta= ", delta)
-
-    #params["LShoulderPitch"] = [0.0972665, 0.96]
+    params = dict()
+    # params["LShoulderPitch"] = [0.0972665, 0.96]
     params["RShoulderPitch"] = [0.0972665, 0.96]
 
-    #params["LHand"] = [0.88, 0.96]
-    #params["RHand"] = [0.88, 0.96]
+    # params["LHand"] = [0.88, 0.96]
+    # params["RHand"] = [0.88, 0.96]
 
-    #params["LWristYaw"] = [-1.309, 0.96]
+    # params["LWristYaw"] = [-1.309, 0.96]
     params["RWristYaw"] = [1.409, 0.96]
 
-    #params["LShoulderRoll"] = [0.10472, 0.96]
+    # params["LShoulderRoll"] = [0.10472, 0.96]
     params["RShoulderRoll"] = [-0.10472, 0.96]
-    move(params, s)
+    service = session.service("ALMotion")
+    pepperMove.move(params, service)
 
-    delta2 = myReward.getDeltaIfNew()
-    winkel2 = readAngles(pepper)
-    rewards = (delta - delta2)
+    delta2 = ballTracker.delta
+    winkel2 = readAngles.readAngles(session)
+    rewards = int((int(delta) - int(delta2)))
     print("####### Run ######")
     print("Delta:\t" + str(delta))
     print("Winkel:\t" + str(winkel))
@@ -68,3 +66,7 @@ if __name__ == "__main__":
     print("Winkel2:\t" + str(winkel2))
     print("rewards:\t" + str(rewards))
     # import this class # Rewards.updateRewards(delta)
+    shutdown(signal.SIGINT, None)
+
+
+def funktion(session):

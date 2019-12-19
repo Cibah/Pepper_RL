@@ -18,7 +18,7 @@ def init(ip, port):
     life_service = session.service("ALAutonomousLife")
     life_service.setAutonomousAbilityEnabled("BackgroundMovement", False)
     service.wakeUp()
-    return service
+    return session
 
 
 def checkMovement(movements):
@@ -63,7 +63,9 @@ def move(movements, service):
         print("FAILED: %s", sys.exc_info()[0])
 
 
-def roboInit(service):
+def roboInit(session):
+    service = session.service("ALMotion")
+
     params = dict()
 
     params["LShoulderPitch"] = [0.0872665, 0.96]
@@ -77,14 +79,14 @@ def roboInit(service):
 
     params["LShoulderRoll"] = [0.10472, 0.96]
     params["RShoulderRoll"] = [-0.10472, 0.96]
-    move(params, s)
+    move(params, service)
     try:
         input("If the tablet is ready, press enter:\n")
     except:
         pass
 
 
-s = init()
-roboInit(s)
-move(args, s)
-s.rest()
+#s = init()
+# roboInit(s)
+#move(args, s)
+# s.rest()

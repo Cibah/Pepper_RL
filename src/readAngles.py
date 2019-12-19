@@ -15,7 +15,7 @@ def readAngles(session):
     angles = dict()
     for motor in MOTORS:
         link = "Device/SubDeviceList/" + motor + "/Position/Sensor/Value"
-        exp = service.getData(link)
+        exp = service_mem.getData(link)
         angles[motor] = exp
         # print(link)
         #print("GRAD : ", exp*180/3.141)
