@@ -257,5 +257,6 @@ class RewardTrackerThread (threading.Thread):
         # close all windows
         cv2.destroyAllWindows()
 
+        
 
 # end

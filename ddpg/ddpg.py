@@ -286,7 +286,7 @@ def train(sess, env, args, actor, critic, actor_noise):
             # Added exploration noise
             #a = actor.predict(np.reshape(s, (1, 3))) + (1. / (1. + i))
            
-            #COLLECT DATA FROM PEPPER FOR SAMPLING: state(Motorenwinkel+Kamera x,y), reward, done=false, info..., Folgezustand= Nächster Batchmovebefehl+ Kamera
+            #COLLECT DATA FROM PEPPER FOR SAMPLING: state(Motorenwinkel+Kamera x,y), reward, done=false, info..., Folgezustand= Naechster Batchmovebefehl+ Kamera
             #WRITE DATA TO some training_file...
             #READ DATA FROM training_file
             for(sampled_data in training_file)
