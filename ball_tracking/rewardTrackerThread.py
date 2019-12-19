@@ -1,5 +1,6 @@
+#-*- coding:utf-8 -*-
 # rewardTrackerThread.py Klasse, die z.B. mit einer Kamera die aktuelle
-# Abweichung von der Zielvorgabe erfaßt und als "Reward" zur Verfügung stellt.
+# Abweichung von der Zielvorgabe erfaßt und als "Reward" zur Verfuegung stellt.
 # Sie nutzt dazu eine Instanz der Reward-Klasse, in die das aktuelle Ergebnis
 # geschrieben wird.
 # Bekommt args beim Anlegen, um auf command-line Argumente zuzugreifen
@@ -25,7 +26,7 @@ class RewardTrackerThread (threading.Thread):
         self.reward = reward
         self.arguments = arguments
         self.conf = commentjson.load(open(self.arguments["conf"]))
-        # init Farbwerte von großer Kugel und kleinem Ball
+        # init Farbwerte von grosser Kugel und kleinem Ball
         # Achtung: Upper / Lower in HSV.Format!!
         self.color1= eval(self.conf["color1"])
         self.lower1= eval(self.conf["lower1"])
@@ -33,7 +34,7 @@ class RewardTrackerThread (threading.Thread):
         self.color2= eval(self.conf["color2"])
         self.lower2= eval(self.conf["lower2"])
         self.upper2= eval(self.conf["upper2"])
-        # Punkte für "Leucht-Schwanz" des kleinen Balls
+        # Punkte fuer "Leucht-Schwanz" des kleinen Balls
         self.pts = deque(maxlen=self.arguments["buffer"])
 
         # if a video path was not supplied, grab the reference
