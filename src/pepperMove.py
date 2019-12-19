@@ -1,25 +1,23 @@
 # Choregraphe bezier export in Python.
-#from naoqi import ALProxy
 import qi
 import time
 import sys
 
-ip = "192.168.0.40"
-port = "9559"
+
 STORED_VALUES = dict()
-MOTORS = ["LElbowRoll", "RElbowRoll", "LElbowYaw","LWristYaw", "RWristYaw",
+MOTORS = ["LElbowRoll", "RElbowRoll", "LElbowYaw", "LWristYaw", "RWristYaw",
           "RElbowYaw", "LShoulderPitch", "RShoulderPitch", "LShoulderRoll", "RShoulderRoll", "LHand", "RHand"]
 session = qi.Session()
 
 
-def init():
+def init(ip, port):
     session.connect("tcp://" + ip + ":" + port)
     service = session.service("ALMotion")
-    #service.wakeUp()
-    #service.rest()
+    # service.wakeUp()
+    # service.rest()
     life_service = session.service("ALAutonomousLife")
     life_service.setAutonomousAbilityEnabled("BackgroundMovement", False)
-    service.wakeUp()    
+    service.wakeUp()
     return service
 
 
@@ -35,7 +33,7 @@ def checkMovement(movements):
         print(motor)
         if motor not in MOTORS:
             print("Error in check: Motor <" + motor + "> not found")
-            #return False
+            # return False
         if motor in STORED_VALUES:
             delta = abs(STORED_VALUES[motor][0] - movements[motor][0])
             if delta >= 10:
@@ -64,6 +62,7 @@ def move(movements, service):
     except:
         print("FAILED: %s", sys.exc_info()[0])
 
+
 def roboInit(service):
     params = dict()
 
@@ -82,12 +81,10 @@ def roboInit(service):
     try:
         input("If the tablet is ready, press enter:\n")
     except:
-        pass         
+        pass
+
 
 s = init()
 roboInit(s)
 move(args, s)
 s.rest()
-
-
-
