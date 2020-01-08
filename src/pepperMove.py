@@ -81,7 +81,7 @@ def roboInit(session):
     params["RShoulderRoll"] = [-0.10472, 0.96]
     move(params, service)
     try:
-        input("If the tablet is ready, press enter:\n")
+        input("Initialization completed, press enter:\n")
     except:
         pass
 
