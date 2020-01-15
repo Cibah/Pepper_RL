@@ -9,17 +9,10 @@ import pepperMove
 import socket
 import thread
 import json
+import ballTracker
 
 ip = "192.168.0.40"
 port = "9559"
-
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
-
-sock = socket.socket(socket.AF_INET, # Internet
-                     socket.SOCK_DGRAM) # UDP
-sock.bind((UDP_IP, UDP_PORT))
-
 
 delta = ""
 
@@ -38,13 +31,6 @@ def readData():
     f = open("training_data.txt", "r")
     print(f.read())
 
-def getDelta():
-    global delta
-    while True:
-        data, addr = sock.recvfrom(128) # buffer size is 1024 bytes
-        #print "received message:", data
-        delta= data.decode()
-        #print(delta)
 
 def getReward(input1, input2):
 
@@ -72,11 +58,12 @@ def getReward(input1, input2):
 
 if __name__ == "__main__":
 
-    global delta
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-w", "--winkel",
+                    help="winkel angabe")
+    args = vars(ap.parse_args())
 
-    t1 = threading.Thread(target=getDelta)
-    t1.start()
-    print("udp thread running...")
+    print("Main running...")
     session = pepperMove.init(ip, port)
     pepperMove.roboInit(session)
     winkel = dict()
@@ -85,8 +72,11 @@ if __name__ == "__main__":
     delta1 = delta
     #Winkel aus choreographe whlen
     params = dict()
-    params["RShoulderPitch"] = [0.0872665, 0.96]
-    params["LShoulderPitch"] = [0.460767, 0.96]
+
+    #wi= args
+    params["RShoulderPitch"] = [0.08, 0.96]
+    params["LShoulderPitch"] = [0.0872665, 0.96]
+
     params["LHand"] = [0.88, 0.96]
     params["RHand"] = [0.88, 0.96]
 
@@ -95,17 +85,6 @@ if __name__ == "__main__":
 
     params["LShoulderRoll"] = [0.10472, 0.96]
     params["RShoulderRoll"] = [-0.10472, 0.96]
-
-    #params["RShoulderPitch"] = [0.1272665, 0.3]
-
-    #params["LHand"] = [0.88, 0.96]
-    #params["RHand"] = [0.88, 0.96]
-
-    #params["LWristYaw"] = [-1.309, 0.96]
-    #params["RWristYaw"] = [2.409, 0.3]
-
-    #params["LShoulderRoll"] = [0.10472, 0.96]
-    #params["RShoulderRoll"] = [0.30472, 0.3]
     
     service = session.service("ALMotion")
     pepperMove.move(params, service)
@@ -124,9 +103,9 @@ if __name__ == "__main__":
     
     me = Object()
     me.az = winkel
-    me.ad = delta1
+    me.ad = ballTracker.delta
     me.fz = winkel2
-    me.fd = delta2
+    me.fd = ballTracker.delta
     me.rw = getReward(delta1,delta2)
     exportData = me.toJSON()
     saveData(exportData)

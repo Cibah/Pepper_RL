@@ -13,10 +13,6 @@ import sys			# used for exit()
 import signal			# to catch Ctrl-C Interrupt
 import socket
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-    
 # define little signal Handler to shutdown rewardTracker-Thread, when Main-Thread closes
 def shutdown(sig, frame):
     print ("Closing...")
@@ -24,9 +20,7 @@ def shutdown(sig, frame):
     # trackingThread.join()	# not requires because of event
     sys.exit(0)
 
-def updateDelta(d1):
-    MESSAGE = str(d1)
-    sock.sendto(MESSAGE.encode(), (UDP_IP, UDP_PORT)) 
+delta=""
 
 if __name__ == "__main__":
     myReward = reward.Reward()
@@ -53,11 +47,11 @@ if __name__ == "__main__":
     myRewardTrackerThread.start() 
 
     while True :
-        delta= myReward.getDeltaIfNew();
+        global delta
+        delta = myReward.getDeltaIfNew()
         # neues Delta 1x ausgeben
-        if delta is not None :
+        if delta is not None:
            print ("Reward= ", delta)
-           updateDelta(delta)       
            #import this class # Rewards.updateRewards(delta)
         time.sleep(0.01)
 
