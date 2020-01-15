@@ -25,7 +25,8 @@ class RewardTrackerThread (threading.Thread):
         self.event = event
         self.reward = reward
         self.arguments = arguments
-        self.conf = commentjson.load(open(self.arguments["conf"]))
+
+        self.conf = commentjson.load(open("./conf.json"))
         # init Farbwerte von grosser Kugel und kleinem Ball
         # Achtung: Upper / Lower in HSV.Format!!
         self.color1 = eval(self.conf["color1"])

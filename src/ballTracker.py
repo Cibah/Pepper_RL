@@ -20,7 +20,7 @@ def shutdown(sig, frame):
     # trackingThread.join()	# not requires because of event
     sys.exit(0)
 
-delta=""
+global delta
 
 if __name__ == "__main__":
     myReward = reward.Reward()
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     myRewardTrackerThread.start() 
 
     while True :
-        global delta
+        #global delta
         delta = myReward.getDeltaIfNew()
         # neues Delta 1x ausgeben
         if delta is not None:

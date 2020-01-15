@@ -73,41 +73,34 @@ if __name__ == "__main__":
     #Winkel aus choreographe whlen
     params = dict()
 
-    #wi= args
-    params["RShoulderPitch"] = [0.08, 0.96]
-    params["LShoulderPitch"] = [0.0872665, 0.96]
+    while True:
+        winkelToTrain = float(raw_input("Winkeleingabe : "))
+        if winkelToTrain == -1:
+            break;
+        params["RShoulderPitch"] = [winkelToTrain, 0.96]
+        service = session.service("ALMotion")
+        pepperMove.move(params, service)
 
-    params["LHand"] = [0.88, 0.96]
-    params["RHand"] = [0.88, 0.96]
+        delta2 = delta
+        winkel2 = readAngles.readAngles(session)
+        print("rewards= "+ delta1+" - "+ delta2)
+        #rewards = int((int(delta) - int(delta2)))
+        rewards = delta
+        print("####### Run ######")
+        print("Delta:\t" + str(delta))
+        print("Winkel:\t" + str(winkel))
+        print("Delta2:\t" + str(delta2))
+        print("Winkel2:\t" + str(winkel2))
+        print("rewards:\t" + str(rewards))
 
-    params["LWristYaw"] = [-1.309, 0.96]
-    params["RWristYaw"] = [1.309, 0.96]
-
-    params["LShoulderRoll"] = [0.10472, 0.96]
-    params["RShoulderRoll"] = [-0.10472, 0.96]
-    
-    service = session.service("ALMotion")
-    pepperMove.move(params, service)
-
-    delta2 = delta
-    winkel2 = readAngles.readAngles(session)
-    print("rewards= "+ delta1+" - "+ delta2)
-    #rewards = int((int(delta) - int(delta2)))
-    rewards = delta
-    print("####### Run ######")
-    print("Delta:\t" + str(delta))
-    print("Winkel:\t" + str(winkel))
-    print("Delta2:\t" + str(delta2))
-    print("Winkel2:\t" + str(winkel2))
-    print("rewards:\t" + str(rewards))
-    
-    me = Object()
-    me.az = winkel
-    me.ad = ballTracker.delta
-    me.fz = winkel2
-    me.fd = ballTracker.delta
-    me.rw = getReward(delta1,delta2)
-    exportData = me.toJSON()
-    saveData(exportData)
+        me = Object()
+        me.az = winkel
+        me.ad = ballTracker.delta
+        me.action = winkelToTrain
+        me.fz = winkel2
+        me.fd = ballTracker.delta
+        me.rw = getReward(delta1,delta2)
+        exportData = me.toJSON()
+        saveData(exportData)
 
 exit()
