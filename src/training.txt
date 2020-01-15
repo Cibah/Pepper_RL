@@ -1,4 +1,4 @@
-Delta2:	(20, 53)
+Delta:	(20, 53)
 
 Winkel:	{
 'LShoulderPitch': 0.09664082527160645, 
