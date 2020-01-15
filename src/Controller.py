@@ -57,12 +57,9 @@ def getReward(input1, input2):
     return reward
 
 if __name__ == "__main__":
-
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-w", "--winkel",
-                    help="winkel angabe")
-    args = vars(ap.parse_args())
-
+    print("Starte BallTrackerThread")
+    t1 = threading.Thread(target=ballTracker.runBallTracker())
+    t1.start()
     print("Main running...")
     session = pepperMove.init(ip, port)
     pepperMove.roboInit(session)
@@ -76,9 +73,11 @@ if __name__ == "__main__":
     while True:
         winkelToTrain = float(raw_input("Winkeleingabe : "))
         if winkelToTrain == -1:
+            print("Ende des Trainings")
             break;
         params["RShoulderPitch"] = [winkelToTrain, 0.96]
         service = session.service("ALMotion")
+        print("Bewege Motor RShoulderPitch um " + winkelToTrain)
         pepperMove.move(params, service)
 
         delta2 = delta
@@ -102,5 +101,5 @@ if __name__ == "__main__":
         me.rw = getReward(delta1,delta2)
         exportData = me.toJSON()
         saveData(exportData)
-
+t1.join()
 exit()

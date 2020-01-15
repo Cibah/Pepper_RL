@@ -20,9 +20,9 @@ def shutdown(sig, frame):
     # trackingThread.join()	# not requires because of event
     sys.exit(0)
 
-global delta
+delta=""
 
-if __name__ == "__main__":
+def runBallTracker():
     myReward = reward.Reward()
     # myReward.print()
     signal.signal(signal.SIGINT, shutdown)
@@ -47,11 +47,12 @@ if __name__ == "__main__":
     myRewardTrackerThread.start() 
 
     while True :
-        #global delta
-        delta = myReward.getDeltaIfNew()
+        global delta
         # neues Delta 1x ausgeben
         if delta is not None:
-           print ("Reward= ", delta)
+            delta = myReward.getDeltaIfNew()
+
+        #print ("Reward= ", delta)
            #import this class # Rewards.updateRewards(delta)
         time.sleep(0.01)
 
