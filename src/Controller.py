@@ -33,9 +33,11 @@ def readData():
 
 
 def getReward(input1, input2):
+    print("Input1: " + str(input1))
+    print("Input2: " + str(input2))
 
-    input1 = input1.replace("(","")
-    input2 = input2.replace("(","")
+    input1 = str(input1).replace("(","")
+    input2 = str(input2).replace("(","")
     
     input1 = input1.replace(")","")
     input2 = input2.replace(")","")
@@ -58,35 +60,44 @@ def getReward(input1, input2):
 
 if __name__ == "__main__":
     print("Starte BallTrackerThread")
-    t1 = threading.Thread(target=ballTracker.runBallTracker())
-    t1.start()
+    global delta
+
+    #t1 = threading.Thread(target=ballTracker.runBallTracker())
+    #t1.start()
+    thread1 = ballTracker.BallTrackerThread()
+    thread1.start()
+
     print("Main running...")
     session = pepperMove.init(ip, port)
     pepperMove.roboInit(session)
     winkel = dict()
 
     winkel = readAngles.readAngles(session)
-    delta1 = delta
     #Winkel aus choreographe whlen
     params = dict()
 
     while True:
-        winkelToTrain = float(raw_input("Winkeleingabe : "))
+        inputstring = raw_input("Winkeleingabe : ")
+        if inputstring == "":
+            continue
+        winkelToTrain = float(inputstring)
         if winkelToTrain == -1:
             print("Ende des Trainings")
             break;
         params["RShoulderPitch"] = [winkelToTrain, 0.96]
         service = session.service("ALMotion")
-        print("Bewege Motor RShoulderPitch um " + winkelToTrain)
-        pepperMove.move(params, service)
+        print("Bewege Motor RShoulderPitch um " + str(winkelToTrain))
+        delta1 = thread1.delta
 
+        pepperMove.move(params, service)
+        delta = thread1.delta
         delta2 = delta
         winkel2 = readAngles.readAngles(session)
-        print("rewards= "+ delta1+" - "+ delta2)
+        print("rewards= "+ str(delta1)+" - "+ str(delta2))
         #rewards = int((int(delta) - int(delta2)))
         rewards = delta
         print("####### Run ######")
-        print("Delta:\t" + str(delta))
+        print("Delta:\t" + str(delta1))
         print("Winkel:\t" + str(winkel))
         print("Delta2:\t" + str(delta2))
         print("Winkel2:\t" + str(winkel2))
@@ -94,12 +105,13 @@ if __name__ == "__main__":
 
         me = Object()
         me.az = winkel
-        me.ad = ballTracker.delta
+        me.ad = delta1
         me.action = winkelToTrain
         me.fz = winkel2
-        me.fd = ballTracker.delta
+        me.fd = delta2
         me.rw = getReward(delta1,delta2)
         exportData = me.toJSON()
         saveData(exportData)
-t1.join()
+    thread1.delta.exitFlag = 1
+    thread1.join()
 exit()
