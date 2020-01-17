@@ -68,7 +68,6 @@ if __name__ == "__main__":
         service = session.service("ALMotion")
         print("Bewege Motor RShoulderPitch um " + str(winkelToTrain))
         delta1 = thread1.delta
-        continue
         pepperMove.move(params, service)
         delta = thread1.delta
         delta2 = delta
