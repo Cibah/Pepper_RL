@@ -1,25 +1,19 @@
-import argparse
-import warnings
-import time
-import threading
-import sys			# used for exit()
-import signal			# to catch Ctrl-C Interrupt
 import readAngles
 import pepperMove
-import socket
-import thread
 import json
 import ballTracker
+import random
 
 ip = "192.168.0.40"
 port = "9559"
 
 delta = ""
 
+
 class Object:
     def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, 
-            sort_keys=True, indent=4)
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
 
 
 def saveData(data):
@@ -27,43 +21,29 @@ def saveData(data):
     f.write(data)
     f.close()
 
+
 def readData():
     f = open("training_data.txt", "r")
     print(f.read())
 
 
-def getReward(input1, input2):
-    print("Input1: " + str(input1))
-    print("Input2: " + str(input2))
-
-    input1 = str(input1).replace("(","")
-    input2 = str(input2).replace("(","")
-    
-    input1 = input1.replace(")","")
-    input2 = input2.replace(")","")
-
-    var1_x = input1.partition(",")[0]
-    var1_y = input1.partition(",")[2]
-    var2_x = input2.partition(",")[0]
-    var2_y = input2.partition(",")[2]
-    print("DEBUG: " + var1_x)    
-    #print("TYPE: " + type(var1_x))
-    var1_x = (abs(int(var1_x)))
+def getReward(delta):
+    print("Delta: " + str(delta))
+    delta = str(delta).replace("(", "")
+    delta = delta.replace(")", "")
+    var2_x = delta.partition(",")[0]
+    var2_y = delta.partition(",")[2]
+    # print("TYPE: " + type(var1_x))
     var2_x = (abs(int(var2_x)))
-    var1_y = (abs(int(var1_y)))
     var2_y = (abs(int(var2_y)))
-
-    sum_x = var1_x + var2_x 
-    sum_y = var1_y + var2_y 
-    reward = 100 - (sum_x + sum_y)
+    reward = 100 - (var2_x + var2_y)
     return reward
+
 
 if __name__ == "__main__":
     print("Starte BallTrackerThread")
     global delta
 
-    #t1 = threading.Thread(target=ballTracker.runBallTracker())
-    #t1.start()
     thread1 = ballTracker.BallTrackerThread()
     thread1.start()
 
@@ -73,28 +53,28 @@ if __name__ == "__main__":
     winkel = dict()
 
     winkel = readAngles.readAngles(session)
-    #Winkel aus choreographe whlen
+    # Winkel aus choreographe whlen
     params = dict()
 
-    while True:
-        inputstring = raw_input("Winkeleingabe : ")
-        if inputstring == "":
-            continue
-        winkelToTrain = float(inputstring)
-        if winkelToTrain == -1:
-            print("Ende des Trainings")
-            break;
-        params["RShoulderPitch"] = [winkelToTrain, 0.96]
+    TRAINING_STEPS = 100
+    OBERE_GRENZE = 0.46
+    UNTERE_GRENZE = -0.095
+    TIME_TO_MOVE = 0.96
+
+    for x in range(TRAINING_STEPS):
+        winkelToTrain = random.uniform(UNTERE_GRENZE, OBERE_GRENZE)
+
+        params["RShoulderPitch"] = [winkelToTrain, TIME_TO_MOVE]
         service = session.service("ALMotion")
         print("Bewege Motor RShoulderPitch um " + str(winkelToTrain))
         delta1 = thread1.delta
-
+        continue
         pepperMove.move(params, service)
         delta = thread1.delta
         delta2 = delta
         winkel2 = readAngles.readAngles(session)
-        print("rewards= "+ str(delta1)+" - "+ str(delta2))
-        #rewards = int((int(delta) - int(delta2)))
+        print("rewards= " + str(delta1) + " - " + str(delta2))
+        # rewards = int((int(delta) - int(delta2)))
         rewards = delta
         print("####### Run ######")
         print("Delta:\t" + str(delta1))
@@ -109,7 +89,9 @@ if __name__ == "__main__":
         me.action = winkelToTrain
         me.fz = winkel2
         me.fd = delta2
-        me.rw = getReward(delta1,delta2)
+        me.v = delta2 / TIME_TO_MOVE
+        me.rw = getReward(delta2)
+
         exportData = me.toJSON()
         saveData(exportData)
     thread1.delta.exitFlag = 1

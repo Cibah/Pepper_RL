@@ -1,5 +1,5 @@
 # Choregraphe bezier export in Python.
-#from naoqi import ALProxy
+# from naoqi import ALProxy
 import qi
 import time
 import sys
@@ -7,10 +7,9 @@ import sys
 
 def readAngles(session):
     STORED_VALUES = dict()
-    MOTORS = ["LElbowRoll", "RElbowRoll", "LElbowYaw", "LWristYaw", "RWristYaw",
-              "RElbowYaw", "LShoulderPitch", "RShoulderPitch", "LShoulderRoll", "RShoulderRoll", "LHand", "RHand"]
-    #session = qi.Session()
-    #session.connect("tcp://" + ip + ":" + port)
+    MOTORS = ["RShoulderPitch"]
+    # session = qi.Session()
+    # session.connect("tcp://" + ip + ":" + port)
     service_mem = session.service("ALMemory")
     angles = dict()
     for motor in MOTORS:
@@ -18,7 +17,7 @@ def readAngles(session):
         exp = service_mem.getData(link)
         angles[motor] = exp
         # print(link)
-        #print("GRAD : ", exp*180/3.141)
-        #print("RAD: ", exp)
+        # print("GRAD : ", exp*180/3.141)
+        # print("RAD: ", exp)
 
     return angles

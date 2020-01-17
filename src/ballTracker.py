@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 # testBallTracker.py
 # kleine Test-Applikation, um die reward-Funktionalitaet des BallTrackers zu testen
 # nutzt aber jetzt RewardTrackerThread-Klasse, d.h. abgeleitete Thread-Klasse
@@ -9,14 +9,15 @@ import time
 import threading
 import reward
 import rewardTrackerThread
-import sys			# used for exit()
-import signal			# to catch Ctrl-C Interrupt
+import sys  # used for exit()
+import signal  # to catch Ctrl-C Interrupt
 import socket
 
-#import Controller
+
+# import Controller
 
 
-class BallTrackerThread (threading.Thread):
+class BallTrackerThread(threading.Thread):
     delta = "START"
     exitFlag = 0
 
@@ -29,7 +30,7 @@ class BallTrackerThread (threading.Thread):
     def run(self):
         myReward = reward.Reward()
         # myReward.print()
-        #signal.signal(signal.SIGINT, shutdown)
+        # signal.signal(signal.SIGINT, shutdown)
 
         # construct the argument parse and parse the arguments
         ap = argparse.ArgumentParser()
@@ -51,32 +52,30 @@ class BallTrackerThread (threading.Thread):
         myRewardTrackerThread.start()
 
         while self.exitFlag == 0:
-            #global delta
+            # global delta
             # neues Delta 1x ausgeben
             deltaTMP = myReward.getDeltaIfNew()
-            #print("Delta="+str(delta))
-            #Controller.delta = delta
+            # print("Delta="+str(delta))
+            # Controller.delta = delta
 
             if deltaTMP is not None:
-                #global delta
+                # global delta
                 # neues Delta 1x ausgeben
-                #print("Delta2=" + str(delta))
-                #Controller.delta = delta
+                # print("Delta2=" + str(delta))
+                # Controller.delta = delta
                 self.delta = deltaTMP
                 # import this class # Rewards.updateRewards(delta)
             time.sleep(0.01)
 
-
 # define little signal Handler to shutdown rewardTracker-Thread, when Main-Thread closes
-#def shutdown(sig, frame):
+# def shutdown(sig, frame):
 #    print ("Closing...")
 #    event.set()
 #    # trackingThread.join()	# not requires because of event
 #    sys.exit(0)
 
 
+# def runBallTracker():
 
-#def runBallTracker():
-
-   # shutdown(signal.SIGINT, None)
+# shutdown(signal.SIGINT, None)
 # Ende

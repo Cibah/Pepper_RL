@@ -3,7 +3,6 @@ import qi
 import time
 import sys
 
-
 STORED_VALUES = dict()
 MOTORS = ["LElbowRoll", "RElbowRoll", "LElbowYaw", "LWristYaw", "RWristYaw",
           "RElbowYaw", "LShoulderPitch", "RShoulderPitch", "LShoulderRoll", "RShoulderRoll", "LHand", "RHand"]
@@ -85,8 +84,7 @@ def roboInit(session):
     except:
         pass
 
-
-#s = init()
+# s = init()
 # roboInit(s)
-#move(args, s)
+# move(args, s)
 # s.rest()
