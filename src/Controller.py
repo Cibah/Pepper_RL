@@ -28,7 +28,7 @@ def readData():
 
 
 def getReward(delta):
-    print("Delta: " + str(delta))
+    #print("Delta: " + str(delta))
     delta = str(delta).replace("(", "")
     delta = delta.replace(")", "")
     var2_x = delta.partition(",")[0]
@@ -56,43 +56,41 @@ if __name__ == "__main__":
     # Winkel aus choreographe whlen
     params = dict()
 
-    TRAINING_STEPS = 100
+    TRAINING_STEPS = 50000
     OBERE_GRENZE = 0.46
     UNTERE_GRENZE = -0.095
-    TIME_TO_MOVE = 0.96
+    TIME_TO_MOVE = 0.3
 
     for x in range(TRAINING_STEPS):
-        winkelToTrain = random.uniform(UNTERE_GRENZE, OBERE_GRENZE)
+        winkelToTrain1 = random.uniform(UNTERE_GRENZE, OBERE_GRENZE)
 
-        params["RShoulderPitch"] = [winkelToTrain, TIME_TO_MOVE]
+        params["RShoulderPitch"] = [winkelToTrain1, TIME_TO_MOVE]
+
         service = session.service("ALMotion")
-        print("Bewege Motor RShoulderPitch um " + str(winkelToTrain))
+        print("Bewege Motor RShoulderPitch um " + str(winkelToTrain1))
+
         delta1 = thread1.delta
         pepperMove.move(params, service)
         delta = thread1.delta
         delta2 = delta
         winkel2 = readAngles.readAngles(session)
-        print("rewards= " + str(delta1) + " - " + str(delta2))
+        #print("rewards= " + str(delta1) + " - " + str(delta2))
         # rewards = int((int(delta) - int(delta2)))
         rewards = delta
-        print("####### Run ######")
-        print("Delta:\t" + str(delta1))
-        print("Winkel:\t" + str(winkel))
-        print("Delta2:\t" + str(delta2))
-        print("Winkel2:\t" + str(winkel2))
-        print("rewards:\t" + str(rewards))
 
         me = Object()
         me.az = winkel
         me.ad = delta1
-        me.action = winkelToTrain
+        me.actionR = winkelToTrain1
         me.fz = winkel2
         me.fd = delta2
-        me.v = delta2 / TIME_TO_MOVE
+        me.v = float(float(delta2[0]) - float(delta[0]))
+        print(str(me.v))
         me.rw = getReward(delta2)
 
         exportData = me.toJSON()
         saveData(exportData)
-    thread1.delta.exitFlag = 1
-    thread1.join()
+    #thread1.delta.exitFlag = 1
+    print("Fertig")
+    #thread1.join()
 exit()

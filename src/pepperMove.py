@@ -26,10 +26,10 @@ def checkMovement(movements):
     # Whats the difference between the old and new value?
     # Do not allow movements that are too strong
     #
-    print("Checking Movements")
+    #print("Checking Movements")
 
     for motor in movements:
-        print(motor)
+        #print(motor)
         if motor not in MOTORS:
             print("Error in check: Motor <" + motor + "> not found")
             # return False
@@ -53,8 +53,8 @@ def move(movements, service):
             keys.append(float(movements[parm][0]))
             # time is thee duration of the movement
             times.append(float(movements[parm][1]))
-            print("Moving: " + parm + " with: " +
-                  str(movements[parm][0]) + " in " + str(movements[parm][1]))
+            #print("Moving: " + parm + " with: " +
+            #      str(movements[parm][0]) + " in " + str(movements[parm][1]))
             STORED_VALUES[parm] = [movements[parm][0], movements[parm][1]]
         service.angleInterpolation(names, keys, times, True)
         return 0  # No Reward at all
@@ -67,8 +67,8 @@ def roboInit(session):
 
     params = dict()
 
-    params["LShoulderPitch"] = [0.0872665, 0.96]
-    params["RShoulderPitch"] = [0.0872665, 0.96]
+    params["LShoulderPitch"] = [0.19, 0.96]
+    params["RShoulderPitch"] = [0.19, 0.96]
 
     params["LHand"] = [0.88, 0.96]
     params["RHand"] = [0.88, 0.96]
@@ -79,10 +79,7 @@ def roboInit(session):
     params["LShoulderRoll"] = [0.10472, 0.96]
     params["RShoulderRoll"] = [-0.10472, 0.96]
     move(params, service)
-    try:
-        input("Initialization completed, press enter:\n")
-    except:
-        pass
+
 
 # s = init()
 # roboInit(s)
