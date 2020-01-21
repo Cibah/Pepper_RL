@@ -32,11 +32,9 @@ def getReward(delta):
     delta = str(delta).replace("(", "")
     delta = delta.replace(")", "")
     var2_x = delta.partition(",")[0]
-    var2_y = delta.partition(",")[2]
     # print("TYPE: " + type(var1_x))
     var2_x = (abs(int(var2_x)))
-    var2_y = (abs(int(var2_y)))
-    reward = 100 - (var2_x + var2_y)
+    reward = 100 - (var2_x)
     return reward
 
 
@@ -50,9 +48,8 @@ if __name__ == "__main__":
     print("Main running...")
     session = pepperMove.init(ip, port)
     pepperMove.roboInit(session)
-    winkel = dict()
 
-    winkel = readAngles.readAngles(session)
+
     # Winkel aus choreographe whlen
     params = dict()
 
@@ -68,12 +65,14 @@ if __name__ == "__main__":
 
         service = session.service("ALMotion")
         print("Bewege Motor RShoulderPitch um " + str(winkelToTrain1))
+        delta1 = thread1.delta[0]
+        winkel = readAngles.readAngles(session).get('RShoulderPitch')
 
-        delta1 = thread1.delta
         pepperMove.move(params, service)
-        delta = thread1.delta
+
+        delta = thread1.delta[0]
         delta2 = delta
-        winkel2 = readAngles.readAngles(session)
+        winkel2 = readAngles.readAngles(session).get('RShoulderPitch')
         #print("rewards= " + str(delta1) + " - " + str(delta2))
         # rewards = int((int(delta) - int(delta2)))
         rewards = delta

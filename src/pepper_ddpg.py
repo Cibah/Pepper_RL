@@ -321,47 +321,34 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
     # in other environments.
     # tflearn.is_training(True)
 
+    TIME_TO_MOVE = 0.3
+
     for i in range(int(args['max_episodes'])):
 
-        #TODO: Environmet initialisieren
-        #s = env.reset()
 
         ep_reward = 0
         ep_ave_max_q = 0
 
         for j in range(int(args['max_episode_len'])):
 
-            # Wir brauchen kein render
-            #if args['render_env']:
-            #    env.render()
-
-            # Added exploration noise
-            #a = actor.predict(np.reshape(s, (1, 3))) + (1. / (1. + i))
-
-
-            #TODO: Import JSON file data!
-            # -state
-            # -state2
-            # -reward
-            #
 
             with open('training_data.txt') as json_file:
                 data = json.load(json_file)
                 q = data['steps']
                 for x in range(len(q)):
                     p = q[x]
-
+                    s = [p['az'].substring(":"), p['ad'].substring(0,',')]
                     # Kombiniere az mit ad ?
                     # s = az + ad
 
                     # s2 = fz + fd
 
-                    a = actor.predict(np.reshape(p['az'], (1, actor.s_dim))) + actor_noise()
-                    s2 = p['fz']
+                    a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
+                    s2 = [p['fz'].substring(":"), p['fd'].substring(0,',')]
                     r = p['rw']
                     # info = False Wird nicht benutzt??
                     terminal = False
-                    replay_buffer.add(np.reshape(p['az'], (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
+                    replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
                                       terminal, np.reshape(s2, (actor.s_dim,)))
 
             #a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
