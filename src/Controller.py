@@ -17,13 +17,13 @@ class Object:
 
 
 def saveData(data):
-    f = open("training_data.txt", "a")
+    f = open("Pepper_Training.txt", "a")
     f.write(data)
     f.close()
 
 
 def readData():
-    f = open("training_data.txt", "r")
+    f = open("Pepper_Training.txt", "r")
     print(f.read())
 
 
@@ -49,13 +49,12 @@ if __name__ == "__main__":
     session = pepperMove.init(ip, port)
     pepperMove.roboInit(session)
 
-
     # Winkel aus choreographe whlen
     params = dict()
 
     TRAINING_STEPS = 50000
-    OBERE_GRENZE = 0.46
-    UNTERE_GRENZE = -0.095
+    OBERE_GRENZE = 0.4
+    UNTERE_GRENZE = -0.15
     TIME_TO_MOVE = 0.3
 
     for x in range(TRAINING_STEPS):
@@ -73,7 +72,7 @@ if __name__ == "__main__":
         delta = thread1.delta[0]
         delta2 = delta
         winkel2 = readAngles.readAngles(session).get('RShoulderPitch')
-        #print("rewards= " + str(delta1) + " - " + str(delta2))
+        # print("rewards= " + str(delta1) + " - " + str(delta2))
         # rewards = int((int(delta) - int(delta2)))
         rewards = delta
 
@@ -83,8 +82,9 @@ if __name__ == "__main__":
         me.actionR = winkelToTrain1
         me.fz = winkel2
         me.fd = delta2
-        me.v = float(float(delta2[0]) - float(delta[0]))
-        print(str(me.v))
+        me.v = 0.0
+        # float(float(delta2[0]) - float(delta[0]))/TIME_TO_MOVE
+        # print(str(me.v))
         me.rw = getReward(delta2)
 
         exportData = me.toJSON()

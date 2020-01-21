@@ -13,24 +13,32 @@ import tensorflow as tf
 import numpy as np
 import tflearn
 import argparse
-import pprint as pp
 import readAngles
 import pepperMove
 import json
 import ballTracker
-import random
 
 from replay_buffer import ReplayBuffer
 
 ip = "192.168.0.40"
 port = "9559"
+state_dim = 2  # env.observation_space.shape[0]
+action_dim = 1  # env.action_space.shape[0]
+action_bound = 0.4  # env.action_space.high
+
+TRAINING_STEPS = 50000
+OBERE_GRENZE = 0.4
+UNTERE_GRENZE = -0.15
+TIME_TO_MOVE = 0.3
 
 delta = ""
+
 
 class Object:
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
+
 
 def saveData(data):
     f = open("training_data.txt", "a")
@@ -44,7 +52,7 @@ def readData():
 
 
 def getReward(delta):
-    #print("Delta: " + str(delta))
+    # print("Delta: " + str(delta))
     delta = str(delta).replace("(", "")
     delta = delta.replace(")", "")
     var2_x = delta.partition(",")[0]
@@ -52,6 +60,8 @@ def getReward(delta):
     var2_x = (abs(int(var2_x)))
     reward = 100 - (var2_x)
     return reward
+
+
 # ===========================
 #   Actor and Critic DNNs
 # ===========================
@@ -287,7 +297,7 @@ def build_summaries():
 #   Agent Training
 # ===========================
 
-def train(sess,session, thread, args, actor, critic, actor_noise):
+def train(sess, session, thread, args, actor, critic, actor_noise):
     # Set up summary Ops
     summary_ops, summary_vars = build_summaries()
 
@@ -312,14 +322,6 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
 
         ep_reward = 0
         ep_ave_max_q = 0
-
-
-
-        TRAINING_STEPS = 50000
-        OBERE_GRENZE = 0.46
-        UNTERE_GRENZE = -0.095
-        TIME_TO_MOVE = 0.3
-
         for j in range(int(args['max_episode_len'])):
             service = session.service("ALMotion")
             params = dict()
@@ -333,11 +335,18 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
             # ITERATE THORUGH SAMPLED DATA AND ADD TO REPLAY BUFFER
 
             a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
-            if a[0] < -0.095:
-                a[0] = -0.095
 
-            if a[0] > 0.46:
-                a[0] = 0.46
+            # a[0] = ((a[0] - (1 - action_bound)) / (action_bound - (1 - action_bound))) * (
+            #            OBERE_GRENZE - UNTERE_GRENZE) + UNTERE_GRENZE
+            # a[0] = a[0]
+
+            if a[0] < UNTERE_GRENZE:
+                print("Winkel zu klein :" + str(a[0]))
+                a[0] = UNTERE_GRENZE
+
+            if a[0] > OBERE_GRENZE:
+                print("Winkel zu gross :" + str(a[0]))
+                a[0] = OBERE_GRENZE
 
             # Fuehre Action aus
             params["RShoulderPitch"] = [a[0], TIME_TO_MOVE]
@@ -351,7 +360,8 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
             # Hole Reward
             r = getReward(delta2)
             terminal = False
-            print("Bewegte Motor RShoulderPitch um " + str(a[0])+ " Delta: " + str(delta2) +  " " + " Reward: " + str(r))
+            print("Bewegte Motor RShoulderPitch um " + str(a[0]) + " Delta: " + str(delta2) + " " + " Reward: " + str(
+                r))
 
             replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
                               terminal, np.reshape(s2, (actor.s_dim,)))
@@ -363,7 +373,6 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
             if replay_buffer.size() > int(args['minibatch_size']):
                 s_batch, a_batch, r_batch, t_batch, s2_batch = \
                     replay_buffer.sample_batch(int(args['minibatch_size']))
-                print("Batch " + str(j) + " finished")
 
                 # Calculate targets
                 target_q = critic.predict_target(
@@ -409,7 +418,6 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
 
 def main(args):
     with tf.Session() as sess:
-
         print("Starte BallTrackerThread")
         global delta
 
@@ -420,11 +428,8 @@ def main(args):
         session = pepperMove.init(ip, port)
         pepperMove.roboInit(session)
 
-        state_dim = 2  # env.observation_space.shape[0]
-        action_dim = 1  # env.action_space.shape[0]
-        action_bound = 0.46  # env.action_space.high
         # Ensure action bound is symmetric
-        #assert (env.action_space.high == -env.action_space.low)
+        # assert (env.action_space.high == -env.action_space.low)
 
         actor = ActorNetwork(sess, state_dim, action_dim, action_bound,
                              float(args['actor_lr']), float(args['tau']),
@@ -445,10 +450,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='provide arguments for DDPG agent')
 
     # agent parameters
-    parser.add_argument('--actor-lr', help='actor network learning rate', default=0.0001)
-    parser.add_argument('--critic-lr', help='critic network learning rate', default=0.001)
+    parser.add_argument('--actor-lr', help='actor network learning rate', default=0.1001)  # 0.0001
+    parser.add_argument('--critic-lr', help='critic network learning rate', default=0.101)  # 0.001
     parser.add_argument('--gamma', help='discount factor for critic updates', default=0.99)
-    parser.add_argument('--tau', help='soft target update parameter', default=0.001)
+    parser.add_argument('--tau', help='soft target update parameter', default=0.1)  # 0,001
     parser.add_argument('--buffer-size', help='max size of the replay buffer', default=1000000)
     parser.add_argument('--minibatch-size', help='size of minibatch for minibatch-SGD', default=64)
 
@@ -467,6 +472,6 @@ if __name__ == '__main__':
 
     args = vars(parser.parse_args())
 
-    #pp.pprint(args)
+    # pp.pprint(args)
 
     main(args)
