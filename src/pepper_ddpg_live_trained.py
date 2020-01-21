@@ -322,17 +322,13 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
 
         for j in range(int(args['max_episode_len'])):
             service = session.service("ALMotion")
-            #winkel = dict()
-
-            #winkel = readAngles.readAngles(session)
-            # Winkel aus choreographe whlen
             params = dict()
+            # Hole Anfangszustand
             delta1 = thread.delta[0]
             winkel1 = readAngles.readAngles(session).get("RShoulderPitch")
-            #v = float(float(delta2[0]) - float(delta[0]))/TIME_TO_MOVE
-
             s = [winkel1, delta1]
-            # Added exploration noise
+
+            # Hole action
             a = actor.predict(np.reshape(s, (1, 2))) + (1. / (1. + i))
             # ITERATE THORUGH SAMPLED DATA AND ADD TO REPLAY BUFFER
 
@@ -343,17 +339,19 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
             if a[0] > 0.46:
                 a[0] = 0.46
 
+            # Fuehre Action aus
             params["RShoulderPitch"] = [a[0], TIME_TO_MOVE]
-
-
             pepperMove.move(params, service)
-            delta = thread.delta[0]
-            delta2 = delta
+
+            # Hole Folgezustand
+            delta2 = thread.delta[0]
             winkel2 = readAngles.readAngles(session).get("RShoulderPitch")
             s2 = [winkel2, delta2]
+
+            # Hole Reward
             r = getReward(delta2)
             terminal = False
-            print("Bewege Motor RShoulderPitch um " + str(a[0])+ " Delta: " + str(delta2))
+            print("Bewegte Motor RShoulderPitch um " + str(a[0])+ " Delta: " + str(delta2) +  " " + " Reward: " + str(r))
 
             replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
                               terminal, np.reshape(s2, (actor.s_dim,)))
