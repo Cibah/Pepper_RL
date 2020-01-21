@@ -48,10 +48,8 @@ def getReward(delta):
     delta = str(delta).replace("(", "")
     delta = delta.replace(")", "")
     var2_x = delta.partition(",")[0]
-    var2_y = delta.partition(",")[2]
     # print("TYPE: " + type(var1_x))
     var2_x = (abs(int(var2_x)))
-    var2_y = (abs(int(var2_y)))
     reward = 100 - (var2_x)
     return reward
 # ===========================
@@ -315,11 +313,7 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
         ep_reward = 0
         ep_ave_max_q = 0
 
-        winkel = dict()
 
-        winkel = readAngles.readAngles(session)
-        # Winkel aus choreographe whlen
-        params = dict()
 
         TRAINING_STEPS = 50000
         OBERE_GRENZE = 0.46
@@ -327,31 +321,39 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
         TIME_TO_MOVE = 0.3
 
         for j in range(int(args['max_episode_len'])):
-
-
-
             service = session.service("ALMotion")
-            print("Bewege Motor RShoulderPitch um " + str(a))
+            #winkel = dict()
 
-            delta1 = thread.delta
-            winkel1 = readAngles.readAngles(session)
-            v = float(float(delta2[0]) - float(delta[0]))/TIME_TO_MOVE
+            #winkel = readAngles.readAngles(session)
+            # Winkel aus choreographe whlen
+            params = dict()
+            delta1 = thread.delta[0]
+            winkel1 = readAngles.readAngles(session).get("RShoulderPitch")
+            #v = float(float(delta2[0]) - float(delta[0]))/TIME_TO_MOVE
 
             s = [winkel1, delta1]
             # Added exploration noise
-            a = actor.predict(np.reshape(s, (1, 3))) + (1. / (1. + i))
+            a = actor.predict(np.reshape(s, (1, 2))) + (1. / (1. + i))
             # ITERATE THORUGH SAMPLED DATA AND ADD TO REPLAY BUFFER
+
             a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
+            if a[0] < -0.095:
+                a[0] = -0.095
+
+            if a[0] > 0.46:
+                a[0] = 0.46
 
             params["RShoulderPitch"] = [a[0], TIME_TO_MOVE]
 
+
             pepperMove.move(params, service)
-            delta = thread.delta
+            delta = thread.delta[0]
             delta2 = delta
-            winkel2 = readAngles.readAngles(session)
+            winkel2 = readAngles.readAngles(session).get("RShoulderPitch")
             s2 = [winkel2, delta2]
             r = getReward(delta2)
             terminal = False
+            print("Bewege Motor RShoulderPitch um " + str(a[0])+ " Delta: " + str(delta2))
 
             replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
                               terminal, np.reshape(s2, (actor.s_dim,)))
@@ -363,11 +365,11 @@ def train(sess,session, thread, args, actor, critic, actor_noise):
             if replay_buffer.size() > int(args['minibatch_size']):
                 s_batch, a_batch, r_batch, t_batch, s2_batch = \
                     replay_buffer.sample_batch(int(args['minibatch_size']))
+                print("Batch " + str(j) + " finished")
 
                 # Calculate targets
                 target_q = critic.predict_target(
                     s2_batch, actor.predict_target(s2_batch))
-
                 y_i = []
                 for k in range(int(args['minibatch_size'])):
                     if t_batch[k]:
@@ -436,8 +438,6 @@ def main(args):
                                actor.get_num_trainable_vars())
 
         actor_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_dim))
-
-
         train(sess, session, thread1, args, actor, critic, actor_noise)
 
         print('Terminated')
@@ -469,6 +469,6 @@ if __name__ == '__main__':
 
     args = vars(parser.parse_args())
 
-    pp.pprint(args)
+    #pp.pprint(args)
 
     main(args)

@@ -67,8 +67,8 @@ def roboInit(session):
 
     params = dict()
 
-    params["LShoulderPitch"] = [0.19, 0.96]
-    params["RShoulderPitch"] = [0.19, 0.96]
+    params["LShoulderPitch"] = [0.088, 0.96]
+    params["RShoulderPitch"] = [0.088, 0.96]
 
     params["LHand"] = [0.88, 0.96]
     params["RHand"] = [0.88, 0.96]
@@ -79,7 +79,10 @@ def roboInit(session):
     params["LShoulderRoll"] = [0.10472, 0.96]
     params["RShoulderRoll"] = [-0.10472, 0.96]
     move(params, service)
-
+    try:
+        raw_input("Initialization completed, press enter:\n")
+    except:
+        pass
 
 # s = init()
 # roboInit(s)

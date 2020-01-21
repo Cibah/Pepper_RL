@@ -35,11 +35,11 @@ class BallTrackerThread(threading.Thread):
         # construct the argument parse and parse the arguments
         ap = argparse.ArgumentParser()
         ap.add_argument("-v", "--video",
-                        help="path to the (optional) video file")
+                        help="path to the (optional) video file", default="/dev/video1")
         ap.add_argument("-b", "--buffer", type=int, default=64,
                         help="max buffer size")
-        ap.add_argument("-c", "--conf", required=True,
-                        help="path to the JSON configuration file")
+        ap.add_argument("-c", "--conf",
+                        help="path to the JSON configuration file", default="conf.json")
         args = vars(ap.parse_args())
         # filter warnings
         warnings.filterwarnings("ignore")
