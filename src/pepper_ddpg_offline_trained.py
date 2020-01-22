@@ -1,22 +1,66 @@
-""" 
+"""
 Implementation of DDPG - Deep Deterministic Policy Gradient
 
-Algorithm and hyperparameter details can be found here: 
+Algorithm and hyperparameter details can be found here:
     http://arxiv.org/pdf/1509.02971v2.pdf
 
-The algorithm is tested on the Pendulum-v0 OpenAI gym task 
+The algorithm is tested on the Pendulum-v0 OpenAI gym task
 and developed with tflearn + Tensorflow
 
 Author: Patrick Emami
 """
 import tensorflow as tf
 import numpy as np
-import json
 import tflearn
 import argparse
-import pprint as pp
+import readAngles
+import pepperMove
+import json
+import ballTracker
 
 from replay_buffer import ReplayBuffer
+
+ip = "192.168.0.40"
+port = "9559"
+state_dim = 2  # env.observation_space.shape[0]
+action_dim = 1  # env.action_space.shape[0]
+action_bound = 0.4  # env.action_space.high
+
+TRAINING_STEPS = 50000
+OBERE_GRENZE = 0.4
+UNTERE_GRENZE = -0.15
+TIME_TO_MOVE = 0.3
+
+delta = ""
+
+
+class Object:
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
+
+
+def saveData(data):
+    f = open("training_data.txt", "a")
+    f.write(data)
+    f.close()
+
+
+def readData():
+    f = open("training_data.txt", "r")
+    print(f.read())
+
+
+def getReward(delta):
+    # print("Delta: " + str(delta))
+    delta = str(delta).replace("(", "")
+    delta = delta.replace(")", "")
+    var2_x = delta.partition(",")[0]
+    # print("TYPE: " + type(var1_x))
+    var2_x = (abs(int(var2_x)))
+    reward = 100 - (var2_x)
+    return reward
+
 
 # ===========================
 #   Actor and Critic DNNs
@@ -33,13 +77,12 @@ class ActorNetwork(object):
 
     def __init__(self, sess, state_dim, action_dim, action_bound, learning_rate, tau, batch_size):
         self.sess = sess
-        self.s_dim = state_dim
-        self.a_dim = action_dim
-        self.action_bound = action_bound
+        self.s_dim = state_dim  # Winkelmotoren+ kamera
+        self.a_dim = action_dim  # Anzahl Motoren z.B. 10
+        self.action_bound = action_bound  # Grenze Winkelbewegung z.B. +5
         self.learning_rate = learning_rate
         self.tau = tau
         self.batch_size = batch_size
-        
 
         # Actor Network
         self.inputs, self.out, self.scaled_out = self.create_actor_network()
@@ -50,13 +93,14 @@ class ActorNetwork(object):
         self.target_inputs, self.target_out, self.target_scaled_out = self.create_actor_network()
 
         self.target_network_params = tf.trainable_variables()[
-            len(self.network_params):]
+                                     len(self.network_params):]
+
         # Op for periodically updating target network with online network
         # weights
         self.update_target_network_params = \
             [self.target_network_params[i].assign(tf.multiply(self.network_params[i], self.tau) +
                                                   tf.multiply(self.target_network_params[i], 1. - self.tau))
-                for i in range(len(self.target_network_params))]
+             for i in range(len(self.target_network_params))]
 
         # This gradient will be provided by the critic network
         self.action_gradient = tf.placeholder(tf.float32, [None, self.a_dim])
@@ -67,7 +111,7 @@ class ActorNetwork(object):
         self.actor_gradients = list(map(lambda x: tf.div(x, self.batch_size), self.unnormalized_actor_gradients))
 
         # Optimization Op
-        self.optimize = tf.train.AdamOptimizer(self.learning_rate).\
+        self.optimize = tf.train.AdamOptimizer(self.learning_rate). \
             apply_gradients(zip(self.actor_gradients, self.network_params))
 
         self.num_trainable_vars = len(
@@ -85,7 +129,6 @@ class ActorNetwork(object):
         w_init = tflearn.initializations.uniform(minval=-0.003, maxval=0.003)
         out = tflearn.fully_connected(
             net, self.a_dim, activation='tanh', weights_init=w_init)
-
         # Scale output to -action_bound to action_bound
         scaled_out = tf.multiply(out, self.action_bound)
         return inputs, out, scaled_out
@@ -111,17 +154,7 @@ class ActorNetwork(object):
 
     def get_num_trainable_vars(self):
         return self.num_trainable_vars
-    
-    def save_Model(self):
-        print('Trying to create model...')
-        model = tflearn.DNN(self.target_out)
-        print('Saving model')
-        model.save("actor/actor_model.tfl")
-        print('DONE!')
 
-    def load_Model(self):
-        # self.model.load("actor/actor_model.tfl")
-        print('Restore...')
 
 class CriticNetwork(object):
     """
@@ -152,8 +185,8 @@ class CriticNetwork(object):
         # weights with regularization
         self.update_target_network_params = \
             [self.target_network_params[i].assign(tf.multiply(self.network_params[i], self.tau) \
-            + tf.multiply(self.target_network_params[i], 1. - self.tau))
-                for i in range(len(self.target_network_params))]
+                                                  + tf.multiply(self.target_network_params[i], 1. - self.tau))
+             for i in range(len(self.target_network_params))]
 
         # Network target (y_i)
         self.predicted_q_value = tf.placeholder(tf.float32, [None, 1])
@@ -218,17 +251,6 @@ class CriticNetwork(object):
 
     def update_target_network(self):
         self.sess.run(self.update_target_network_params)
-    
-    def save_Model(self):
-        print('Trying to create model...')
-        model = tflearn.DNN(self.target_out)
-        print('Saving model')
-        model.save("critic/critic_model.tfl")
-        print('DONE!')
-    
-    def load_Model(self):
-        # self.model.load("critic/critic_model.tfl")
-        print('Restore...')
 
 
 # Taken from https://github.com/openai/baselines/blob/master/baselines/ddpg/noise.py, which is
@@ -244,7 +266,7 @@ class OrnsteinUhlenbeckActionNoise:
 
     def __call__(self):
         x = self.x_prev + self.theta * (self.mu - self.x_prev) * self.dt + \
-                self.sigma * np.sqrt(self.dt) * np.random.normal(size=self.mu.shape)
+            self.sigma * np.sqrt(self.dt) * np.random.normal(size=self.mu.shape)
         self.x_prev = x
         return x
 
@@ -253,6 +275,7 @@ class OrnsteinUhlenbeckActionNoise:
 
     def __repr__(self):
         return 'OrnsteinUhlenbeckActionNoise(mu={}, sigma={})'.format(self.mu, self.sigma)
+
 
 # ===========================
 #   Tensorflow Summary Ops
@@ -269,104 +292,83 @@ def build_summaries():
 
     return summary_ops, summary_vars
 
+
 # ===========================
 #   Agent Training
 # ===========================
-def testDDPG(sess, env, args, actor, critic, actor_noise):
 
-
-    # test for max_episodes number of episodes
-    for i in range(int(args['max_episodes'])):
-
-        s = env.reset()
-
-        ep_reward = 0
-        ep_ave_max_q = 0
-
-        for j in range(int(args['max_episode_len'])):
-
-            if args['render_env']:
-                env.render()
-
-            # a = actor.predict(np.reshape(s, (1, actor.s_dim))) 
-            a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
-            s2, r, terminal, info = env.step(a[0])
-
-            s = s2
-            ep_reward += r
-
-            if terminal:
-                print('| Episode: {:d} | Reward: {:d} |'.format(i, int(ep_reward)))
-                break
-
-def train(sess, args, actor, critic, actor_noise, update_model, saver):
-    
+def train(sess, session, thread, args, actor, critic, actor_noise, update_model, saver):
     # Set up summary Ops
     summary_ops, summary_vars = build_summaries()
-    
+
     if update_model == False:
         sess.run(tf.global_variables_initializer())
         # Initialize target network weights
         actor.update_target_network()
         critic.update_target_network()
-        
+
+
     writer = tf.summary.FileWriter(args['summary_dir'], sess.graph)
+
     # Initialize replay memory
     replay_buffer = ReplayBuffer(int(args['buffer_size']), int(args['random_seed']))
 
-    # Needed to enable BatchNorm. 
+    # Needed to enable BatchNorm.
     # This hurts the performance on Pendulum but could be useful
     # in other environments.
     # tflearn.is_training(True)
 
     for i in range(int(args['max_episodes'])):
 
-        #TODO: Environmet initialisieren
-        #s = env.reset()
+        # s = env.reset()
 
         ep_reward = 0
         ep_ave_max_q = 0
-
         for j in range(int(args['max_episode_len'])):
+            service = session.service("ALMotion")
+            params = dict()
+            # Hole Anfangszustand
+            delta1 = thread.delta[0]
+            winkel1 = readAngles.readAngles(session).get("RShoulderPitch")
+            s = [winkel1, delta1]
 
-            # Wir brauchen kein render
-            #if args['render_env']:
-            #    env.render()
+            # Hole action
+            a = actor.predict(np.reshape(s, (1, 2))) + (1. / (1. + i))
+            # ITERATE THORUGH SAMPLED DATA AND ADD TO REPLAY BUFFER
 
-            # Added exploration noise
-            #a = actor.predict(np.reshape(s, (1, 3))) + (1. / (1. + i))
+            a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
 
+            # a[0] = ((a[0] - (1 - action_bound)) / (action_bound - (1 - action_bound))) * (
+            #            OBERE_GRENZE - UNTERE_GRENZE) + UNTERE_GRENZE
+            # a[0] = a[0]
 
-            #TODO: Import JSON file data!
-            # -state
-            # -state2
-            # -reward
-            #
+            if a[0] < UNTERE_GRENZE:
+                print("Winkel zu klein :" + str(a[0]))
+                a[0] = UNTERE_GRENZE
 
-            with open('training_data.txt') as json_file:
-                data = json.load(json_file)
-                q = data['steps']
-                for x in range(len(q)):
-                    p = q[x]
+            if a[0] > OBERE_GRENZE:
+                print("Winkel zu gross :" + str(a[0]))
+                a[0] = OBERE_GRENZE
 
-                    # Kombiniere az mit ad ?
-                    # s = az + ad
+            # Fuehre Action aus
+            params["RShoulderPitch"] = [a[0], TIME_TO_MOVE]
+            pepperMove.move(params, service)
 
-                    # s2 = fz + fd
+            # Hole Folgezustand
+            delta2 = thread.delta[0]
+            winkel2 = readAngles.readAngles(session).get("RShoulderPitch")
+            s2 = [winkel2, delta2]
 
-                    a = actor.predict(np.reshape(p['az'], (1, actor.s_dim))) + actor_noise()
-                    print(type(a))
-                    s2 = p['fz']
-                    r = p['rw']
-                    # info = False Wird nicht benutzt??
-                    terminal = False
-                    replay_buffer.add(np.reshape(p['az'], (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
-                                      terminal, np.reshape(s2, (actor.s_dim,)))
+            # Hole Reward
+            r = getReward(delta2)
+            terminal = False
+            print("Bewegte Motor RShoulderPitch um " + str(a[0]) + " Delta: " + str(delta2) + " " + " Reward: " + str(
+                r))
 
-            #a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
-            #s2, r, terminal, info = env.step(a[0])
+            replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
+                              terminal, np.reshape(s2, (actor.s_dim,)))
 
-            #replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r, terminal, np.reshape(s2, (actor.s_dim,)))
+            # export actor Model somewhere
 
             # Keep adding experience to the memory until
             # there are at least minibatch size samples
@@ -377,7 +379,6 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
                 # Calculate targets
                 target_q = critic.predict_target(
                     s2_batch, actor.predict_target(s2_batch))
-
                 y_i = []
                 for k in range(int(args['minibatch_size'])):
                     if t_batch[k]:
@@ -402,28 +403,35 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
 
             s = s2
             ep_reward += r
-        print('Episode completed!')
-        if i % int(args['save']) == 0 and i != 0:
-            print('Saving model')
-            saver.save(sess, "ckpt/model")
-    
 
-        
+            if terminal:
+                summary_str = sess.run(summary_ops, feed_dict={
+                    summary_vars[0]: ep_reward,
+                    summary_vars[1]: ep_ave_max_q / float(j)
+                })
+
+                writer.add_summary(summary_str, i)
+                writer.flush()
+
+                print('| Reward: {:d} | Episode: {:d} | Qmax: {:.4f}'.format(int(ep_reward), \
+                                                                             i, (ep_ave_max_q / float(j))))
+                break
+
 
 def main(args):
-
     with tf.Session() as sess:
+        print("Starte BallTrackerThread")
+        global delta
 
-        #env = gym.make(args['env'])
-        np.random.seed(int(args['random_seed']))
-        tf.set_random_seed(int(args['random_seed']))
-        #env.seed(int(args['random_seed']))
+        thread1 = ballTracker.BallTrackerThread()
+        thread1.start()
 
-        state_dim = 2 #env.observation_space.shape[0]
-        action_dim = 1 #env.action_space.shape[0]
-        action_bound = 0.46 #env.action_space.high
+        print("Main running...")
+        session = pepperMove.init(ip, port)
+        pepperMove.roboInit(session)
+
         # Ensure action bound is symmetric
-        #assert (env.action_space.high == -env.action_space.low)
+        # assert (env.action_space.high == -env.action_space.low)
 
         actor = ActorNetwork(sess, state_dim, action_dim, action_bound,
                              float(args['actor_lr']), float(args['tau']),
@@ -433,49 +441,41 @@ def main(args):
                                float(args['critic_lr']), float(args['tau']),
                                float(args['gamma']),
                                actor.get_num_trainable_vars())
-        actor_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_dim))
 
-        # if args['use_gym_monitor']:
-        #     if not args['render_env']:
-        #         env = wrappers.Monitor(
-        #             env, args['monitor_dir'], video_callable=False, force=True)
-        #     else:
-        #         env = wrappers.Monitor(env, args['monitor_dir'], force=True)
+        actor_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_dim))
 
         print('The following MODE is detected: %s', args['mode'])
         if args['mode'] == 'INIT':
-            train(sess, args, actor, critic, actor_noise, False, None)
+            saver = tf.train.Saver()
+            train(sess, session, thread1, args, actor, critic, actor_noise, False, saver)
         elif args['mode'] == 'TRAIN':
             saver = tf.train.Saver()
-            saver.restore(sess, "ckpt/model")
-            train(sess, args, actor, critic, actor_noise, True, saver)
-        elif args['mode'] == 'TEST':
-            saver = tf.train.Saver()
-            saver.restore(sess, "ckpt/model")
-            testDDPG(sess, args, actor, critic, actor_noise)
+            saver.restore(sess, "ckpt_01/model")
+            train(sess, session, thread1, args, actor, critic, actor_noise, True, saver)
+        # elif args['mode'] == 'TEST':
+        #     saver = tf.train.Saver()
+        #     saver.restore(sess, "ckpt/model")
+        #     testDDPG(sess, args, actor, critic, actor_noise)
         else:
             print('No mode defined!')
-
-
-        # This gives an error...
-        # if args['use_gym_monitor']:
-        #     env.monitor.close()
+        #train(sess, session, thread1, args, actor, critic, actor_noise)
 
         print('Terminated')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='provide arguments for DDPG agent')
 
     # agent parameters
-    parser.add_argument('--actor-lr', help='actor network learning rate', default=0.001)
-    parser.add_argument('--critic-lr', help='critic network learning rate', default=0.001)
+    parser.add_argument('--actor-lr', help='actor network learning rate', default=0.1001)  # 0.0001
+    parser.add_argument('--critic-lr', help='critic network learning rate', default=0.101)  # 0.001
     parser.add_argument('--gamma', help='discount factor for critic updates', default=0.99)
-    parser.add_argument('--tau', help='soft target update parameter', default=0.001)
+    parser.add_argument('--tau', help='soft target update parameter', default=0.1)  # 0,001
     parser.add_argument('--buffer-size', help='max size of the replay buffer', default=1000000)
     parser.add_argument('--minibatch-size', help='size of minibatch for minibatch-SGD', default=64)
 
-    parser.add_argument('--mode', help='Use INIT, TRAIN or TEST', default='INIT')
-    parser.add_argument('--save', help='how many episodes for saving in INIT and TRAIN', default=60)
+    parser.add_argument('--mode', help='Use INIT, TRAIN', default='INIT')
+    parser.add_argument('--save', help='how many episodes for saving in INIT and TRAIN', default=10)
 
     # run parameters
     parser.add_argument('--env', help='choose the gym env- tested on {Pendulum-v0}', default='Pendulum-v0')
@@ -489,9 +489,9 @@ if __name__ == '__main__':
 
     parser.set_defaults(render_env=False)
     parser.set_defaults(use_gym_monitor=True)
-    
+
     args = vars(parser.parse_args())
-    
-    pp.pprint(args)
+
+    # pp.pprint(args)
 
     main(args)
