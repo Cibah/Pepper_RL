@@ -42,8 +42,6 @@ def checkMovement(movements):
 
 
 def move(movements, service):
-    if (not checkMovement(movements)):
-        return -1  # Bad Reward
     try:
         names = list()
         times = list()
@@ -78,13 +76,9 @@ def roboInit(session):
 
     params["LShoulderRoll"] = [0.10472, 0.96]
     params["RShoulderRoll"] = [-0.10472, 0.96]
+    params["HipPitch"] = [-0.119911, 0.96]
     move(params, service)
     try:
         raw_input("Initialization completed, press enter:\n")
     except:
         pass
-
-# s = init()
-# roboInit(s)
-# move(args, s)
-# s.rest()

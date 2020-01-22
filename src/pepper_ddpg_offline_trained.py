@@ -20,7 +20,7 @@ import ballTracker
 
 from replay_buffer import ReplayBuffer
 
-ip = "192.168.0.40"
+ip = "192.168.0.41"
 port = "9559"
 state_dim = 2  # env.observation_space.shape[0]
 action_dim = 1  # env.action_space.shape[0]
@@ -41,13 +41,13 @@ class Object:
 
 
 def saveData(data):
-    f = open("training_data.txt", "a")
+    f = open("HipTraining.txt", "a")
     f.write(data)
     f.close()
 
 
 def readData():
-    f = open("training_data.txt", "r")
+    f = open("HipTraining.txt", "r")
     print(f.read())
 
 
@@ -341,14 +341,16 @@ def train(sess, session, thread, args, actor, critic, actor_noise, update_model,
             # a[0] = ((a[0] - (1 - action_bound)) / (action_bound - (1 - action_bound))) * (
             #            OBERE_GRENZE - UNTERE_GRENZE) + UNTERE_GRENZE
             # a[0] = a[0]
-
+            rewardTMP = 0
             if a[0] < UNTERE_GRENZE:
-                print("Winkel zu klein :" + str(a[0]))
+                # print("Winkel zu klein :" + str(a[0]))
                 a[0] = UNTERE_GRENZE
+                rewardTMP = -1000
 
             if a[0] > OBERE_GRENZE:
-                print("Winkel zu gross :" + str(a[0]))
+                # print("Winkel zu gross :" + str(a[0]))
                 a[0] = OBERE_GRENZE
+                rewardTMP = -1000
 
             # Fuehre Action aus
             params["RShoulderPitch"] = [a[0], TIME_TO_MOVE]
@@ -360,9 +362,11 @@ def train(sess, session, thread, args, actor, critic, actor_noise, update_model,
             s2 = [winkel2, delta2]
 
             # Hole Reward
-            r = getReward(delta2)
+            r = getReward(delta2) + rewardTMP
             terminal = False
-            print("Bewegte Motor RShoulderPitch um " + str(a[0]) + " Delta: " + str(delta2) + " " + " Reward: " + str(
+            # print("Bewegte Motor RShoulderPitch um " + str(a[0]) + " Delta: " + str(delta2) + " " + " Reward: " + str(
+            #   r))
+            print(str(a[0]) + "\t" + str(
                 r))
 
             replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
@@ -474,7 +478,7 @@ if __name__ == '__main__':
     parser.add_argument('--buffer-size', help='max size of the replay buffer', default=1000000)
     parser.add_argument('--minibatch-size', help='size of minibatch for minibatch-SGD', default=64)
 
-    parser.add_argument('--mode', help='Use INIT, TRAIN', default='INIT')
+    parser.add_argument('--mode', help='Use INIT, TRAIN', default='TRAIN')
     parser.add_argument('--save', help='how many episodes for saving in INIT and TRAIN', default=10)
 
     # run parameters

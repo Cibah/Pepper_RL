@@ -17,13 +17,13 @@ class Object:
 
 
 def saveData(data):
-    f = open("Pepper_Training.txt", "a")
+    f = open("HipTraining.txt", "a")
     f.write(data)
     f.close()
 
 
 def readData():
-    f = open("Pepper_Training.txt", "r")
+    f = open("HipTraining.txt", "r")
     print(f.read())
 
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     TRAINING_STEPS = 50000
     OBERE_GRENZE = 0.4
-    UNTERE_GRENZE = -0.15
+    UNTERE_GRENZE = -0.35
     TIME_TO_MOVE = 0.3
 
     for x in range(TRAINING_STEPS):

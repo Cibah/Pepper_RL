@@ -24,11 +24,11 @@ ip = "192.168.0.40"
 port = "9559"
 state_dim = 2  # env.observation_space.shape[0]
 action_dim = 1  # env.action_space.shape[0]
-action_bound = 0.4  # env.action_space.high
+action_bound = 0.3  # env.action_space.high
 
 TRAINING_STEPS = 50000
-OBERE_GRENZE = 0.4
-UNTERE_GRENZE = -0.15
+OBERE_GRENZE = 0.3
+UNTERE_GRENZE = -0.25
 TIME_TO_MOVE = 0.3
 
 delta = ""
