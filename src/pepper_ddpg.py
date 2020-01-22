@@ -332,24 +332,26 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
         for j in range(int(args['max_episode_len'])):
 
 
-            with open('training_data.txt') as json_file:
+            with open('Pepper_Training.txt') as json_file:
                 data = json.load(json_file)
                 q = data['steps']
-                for x in range(len(q)):
-                    p = q[x]
-                    s = [p['az'].substring(":"), p['ad'].substring(0,',')]
-                    # Kombiniere az mit ad ?
-                    # s = az + ad
 
-                    # s2 = fz + fd
+                p = q[j]
+                s = [p['az'], p['ad']]
+                # Kombiniere az mit ad ?
+                # s = az + ad
 
-                    a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
-                    s2 = [p['fz'].substring(":"), p['fd'].substring(0,',')]
-                    r = p['rw']
-                    # info = False Wird nicht benutzt??
-                    terminal = False
-                    replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
-                                      terminal, np.reshape(s2, (actor.s_dim,)))
+                # s2 = fz + fd
+
+                a = p['actionR']
+
+                # actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
+                s2 = [p['fz'], p['fd']]
+                r = p['rw']
+                # info = False Wird nicht benutzt??
+                terminal = False
+                replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
+                                  terminal, np.reshape(s2, (actor.s_dim,)))
 
             #a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
             #s2, r, terminal, info = env.step(a[0])
@@ -389,7 +391,9 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
                 critic.update_target_network()
 
             s = s2
+            #print('Step completed: ' + str(j))
             ep_reward += r
+        print('EP_Reward: ' + str(ep_reward/2500))
         print('Episode completed!')
         if i % int(args['save']) == 0 and i != 0:
             print('Saving model')
@@ -432,7 +436,8 @@ def main(args):
 
         print('The following MODE is detected: %s', args['mode'])
         if args['mode'] == 'INIT':
-            train(sess, args, actor, critic, actor_noise, False, None)
+            saver = tf.train.Saver()
+            train(sess, args, actor, critic, actor_noise, False, saver)
         elif args['mode'] == 'TRAIN':
             saver = tf.train.Saver()
             saver.restore(sess, "ckpt/model")
@@ -463,13 +468,13 @@ if __name__ == '__main__':
     parser.add_argument('--minibatch-size', help='size of minibatch for minibatch-SGD', default=64)
 
     parser.add_argument('--mode', help='Use INIT, TRAIN or TEST', default='INIT')
-    parser.add_argument('--save', help='how many episodes for saving in INIT and TRAIN', default=60)
+    parser.add_argument('--save', help='how many episodes for saving in INIT and TRAIN', default=10)
 
     # run parameters
     parser.add_argument('--env', help='choose the gym env- tested on {Pendulum-v0}', default='Pendulum-v0')
     parser.add_argument('--random-seed', help='random seed for repeatability', default=1234)
     parser.add_argument('--max-episodes', help='max num of episodes to do while training', default=50000)
-    parser.add_argument('--max-episode-len', help='max length of 1 episode', default=1000)
+    parser.add_argument('--max-episode-len', help='max length of 1 episode', default=2500)
     parser.add_argument('--render-env', help='render the gym env', action='store_true')
     parser.add_argument('--use-gym-monitor', help='record gym results', action='store_true')
     parser.add_argument('--monitor-dir', help='directory for storing gym results', default='./results/gym_ddpg')
