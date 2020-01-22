@@ -322,6 +322,8 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
     # tflearn.is_training(True)
 
     TIME_TO_MOVE = 0.3
+    MULTIPLICATOR = 0
+    STEPSIZE = 100
 
     for i in range(int(args['max_episodes'])):
 
@@ -336,7 +338,11 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
                 data = json.load(json_file)
                 q = data['steps']
 
-                p = q[j]
+                if (j + (STEPSIZE * MULTIPLICATOR) >= len(q)) :
+                    print('Reset Multiplicator')
+                    MULTIPLICATOR = 0
+
+                p = q[j + (STEPSIZE * MULTIPLICATOR)]
                 s = [p['az'], p['ad']]
                 # Kombiniere az mit ad ?
                 # s = az + ad
@@ -393,11 +399,12 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
             s = s2
             #print('Step completed: ' + str(j))
             ep_reward += r
-        print('EP_Reward: ' + str(ep_reward/2500))
+        MULTIPLICATOR = MULTIPLICATOR + 1
+        print('EP_Reward: ' + str(ep_reward/100))
         print('Episode completed!')
         if i % int(args['save']) == 0 and i != 0:
             print('Saving model')
-            saver.save(sess, "ckpt/model")
+            saver.save(sess, "ckpt_02/model")
     
 
         
@@ -440,11 +447,11 @@ def main(args):
             train(sess, args, actor, critic, actor_noise, False, saver)
         elif args['mode'] == 'TRAIN':
             saver = tf.train.Saver()
-            saver.restore(sess, "ckpt/model")
+            saver.restore(sess, "chkpt_02/model")
             train(sess, args, actor, critic, actor_noise, True, saver)
         elif args['mode'] == 'TEST':
             saver = tf.train.Saver()
-            saver.restore(sess, "ckpt/model")
+            saver.restore(sess, "chkpt_02/model")
             testDDPG(sess, args, actor, critic, actor_noise)
         else:
             print('No mode defined!')
@@ -474,7 +481,7 @@ if __name__ == '__main__':
     parser.add_argument('--env', help='choose the gym env- tested on {Pendulum-v0}', default='Pendulum-v0')
     parser.add_argument('--random-seed', help='random seed for repeatability', default=1234)
     parser.add_argument('--max-episodes', help='max num of episodes to do while training', default=50000)
-    parser.add_argument('--max-episode-len', help='max length of 1 episode', default=2500)
+    parser.add_argument('--max-episode-len', help='max length of 1 episode', default=100)
     parser.add_argument('--render-env', help='render the gym env', action='store_true')
     parser.add_argument('--use-gym-monitor', help='record gym results', action='store_true')
     parser.add_argument('--monitor-dir', help='directory for storing gym results', default='./results/gym_ddpg')
