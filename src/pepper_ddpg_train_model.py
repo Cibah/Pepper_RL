@@ -338,11 +338,8 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
                 data = json.load(json_file)
                 q = data['steps']
 
-                if (j + (STEPSIZE * MULTIPLICATOR) >= len(q)) :
-                    print('Reset Multiplicator')
-                    MULTIPLICATOR = 0
-
-                p = q[j + (STEPSIZE * MULTIPLICATOR)]
+                #p = q[j + (STEPSIZE * MULTIPLICATOR)]
+                p = q[j]
                 s = [p['az'], p['ad']]
                 # Kombiniere az mit ad ?
                 # s = az + ad
@@ -399,12 +396,12 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
             s = s2
             #print('Step completed: ' + str(j))
             ep_reward += r
-        MULTIPLICATOR = MULTIPLICATOR + 1
-        print('EP_Reward: ' + str(ep_reward/100))
+        #MULTIPLICATOR = MULTIPLICATOR + 1
+        print('EP_Reward: ' + str(ep_reward/2500))
         print('Episode completed!')
         if i % int(args['save']) == 0 and i != 0:
             print('Saving model')
-            saver.save(sess, "ckpt_02/model")
+            saver.save(sess, "model_final/model")
     
 
         
@@ -447,7 +444,7 @@ def main(args):
             train(sess, args, actor, critic, actor_noise, False, saver)
         elif args['mode'] == 'TRAIN':
             saver = tf.train.Saver()
-            saver.restore(sess, "chkpt_02/model")
+            saver.restore(sess, "model_final/model")
             train(sess, args, actor, critic, actor_noise, True, saver)
         elif args['mode'] == 'TEST':
             saver = tf.train.Saver()
@@ -467,10 +464,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='provide arguments for DDPG agent')
 
     # agent parameters
-    parser.add_argument('--actor-lr', help='actor network learning rate', default=0.001)
-    parser.add_argument('--critic-lr', help='critic network learning rate', default=0.001)
+    parser.add_argument('--actor-lr', help='actor network learning rate', default=0.01)
+    parser.add_argument('--critic-lr', help='critic network learning rate', default=0.01)
     parser.add_argument('--gamma', help='discount factor for critic updates', default=0.99)
-    parser.add_argument('--tau', help='soft target update parameter', default=0.001)
+    parser.add_argument('--tau', help='soft target update parameter', default=0.01)
     parser.add_argument('--buffer-size', help='max size of the replay buffer', default=1000000)
     parser.add_argument('--minibatch-size', help='size of minibatch for minibatch-SGD', default=64)
 
@@ -480,8 +477,8 @@ if __name__ == '__main__':
     # run parameters
     parser.add_argument('--env', help='choose the gym env- tested on {Pendulum-v0}', default='Pendulum-v0')
     parser.add_argument('--random-seed', help='random seed for repeatability', default=1234)
-    parser.add_argument('--max-episodes', help='max num of episodes to do while training', default=50000)
-    parser.add_argument('--max-episode-len', help='max length of 1 episode', default=100)
+    parser.add_argument('--max-episodes', help='max num of episodes to do while training', default=1500)
+    parser.add_argument('--max-episode-len', help='max length of 1 episode', default=2500)
     parser.add_argument('--render-env', help='render the gym env', action='store_true')
     parser.add_argument('--use-gym-monitor', help='record gym results', action='store_true')
     parser.add_argument('--monitor-dir', help='directory for storing gym results', default='./results/gym_ddpg')
