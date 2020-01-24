@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 """
-Pepper Train a Model with given training_sets.
+Pepper Train offline a Model with given training_sets.
 """
 import json
 
@@ -7,11 +8,11 @@ import tensorflow as tf
 import numpy as np
 
 from src.Settings import *
-from ddpg.ddpg import ActorNetwork, CriticNetwork, OrnsteinUhlenbeckActionNoise, testDDPG, ReplayBuffer
+from ddpg.ddpg import ActorNetwork, CriticNetwork, OrnsteinUhlenbeckActionNoise, ReplayBuffer
 from src.ddpg.ddpg import build_summaries
 
 
-def train(sess, args, actor, critic, actor_noise, update_model, saver):
+def trainFromFile(sess, args, actor, critic, actor_noise, update_model, saver):
     # Set up summary Ops
     summary_ops, summary_vars = build_summaries()
 
@@ -20,7 +21,7 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
         # Initialize target network weights
         actor.update_target_network()
         critic.update_target_network()
-        
+
     writer = tf.summary.FileWriter(args['summary_dir'], sess.graph)
     # Initialize replay memory
     replay_buffer = ReplayBuffer(int(args['buffer_size']), int(args['random_seed']))
@@ -81,7 +82,7 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
         print("Epoche: " + str(i) + "\t" + str(ep_reward / args['max_episode_len']) + " beendet")
         if i % int(args['save']) == 0 and i != 0:
             print('Saving model')
-            saver.save(sess, args['model'])
+            saver.save(sess, args['model'] + "/model")
 
 
 def main():
@@ -90,11 +91,6 @@ def main():
 
         np.random.seed(int(args['random_seed']))
         tf.set_random_seed(int(args['random_seed']))
-
-        state_dim = 2  # env.observation_space.shape[0]
-        action_dim = 1  # env.action_space.shape[0]
-        action_bound = 0.46  # env.action_space.high
-        # Ensure action bound is symmetric
 
         actor = ActorNetwork(sess, state_dim, action_dim, action_bound,
                              float(args['actor_lr']), float(args['tau']),
@@ -106,23 +102,20 @@ def main():
                                actor.get_num_trainable_vars())
         actor_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_dim))
 
-
         print('The following MODE is detected: %s', args['mode'])
         if args['mode'] == 'INIT':
             saver = tf.train.Saver()
-            train(sess, args, actor, critic, actor_noise, False, saver)
+            trainFromFile(sess, args, actor, critic, actor_noise, False, saver)
         elif args['mode'] == 'TRAIN':
             saver = tf.train.Saver()
             saver.restore(sess, args['model'] + "/model")
-            train(sess, args, actor, critic, actor_noise, True, saver)
+            trainFromFile(sess, args, actor, critic, actor_noise, True, saver)
         elif args['mode'] == 'TEST':
             saver = tf.train.Saver()
             saver.restore(sess, args['model'] + "/model")
-            testDDPG(sess, args, actor, critic, actor_noise)
+            # testDDPG(sess, args, actor, critic, actor_noise)
         else:
             print('No mode defined!')
-
-        print('Terminated')
 
 if __name__ == '__main__':
     main()

@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 ip = "192.168.0.41"
 port = "9559"
 state_dim = 2  # env.observation_space.shape[0]
 action_dim = 1  # env.action_space.shape[0]
 action_bound = 0.4  # env.action_space.high
-TRAINING_STEPS = 50000
+TRAINING_STEPS = 2000
 OBERE_GRENZE = 0.4
 UNTERE_GRENZE = -0.25
 TIME_TO_MOVE = 0.3
@@ -12,7 +13,7 @@ TRAINING_FILE = "feedback.txt"
 delta = ""
 
 args = dict()
-args['model'] = "feedback_1"
+args['model'] = "feedback_2"
 args['mode'] = "INIT"
 args['motor'] = "RShoulderPitch"
 args['summary_dir'] = "./results/tf_ddpg"

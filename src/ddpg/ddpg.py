@@ -4,17 +4,11 @@ import random
 import numpy as np
 import tflearn
 
-from src import Pepper
-from src.Pepper.Pepper import readAngles
-from src.Settings import *
-
 
 def getReward(delta):
-    # print("Delta: " + str(delta))
     delta = str(delta).replace("(", "")
     delta = delta.replace(")", "")
     var2_x = delta.partition(",")[0]
-    # print("TYPE: " + type(var1_x))
     var2_x = (abs(int(var2_x)))
     reward = 100 - (var2_x)
     return reward

@@ -1,4 +1,5 @@
-# Reines Sammeln von Trainingsdaten mit Hilfe von Zufallszahlen
+# -*- coding: utf-8 -*-
+## Reines Sammeln von Trainingsdaten mit Hilfe von Zufallszahlen
 
 from src.Pepper import Pepper
 from src.Pepper.Pepper import readAngles
@@ -10,19 +11,17 @@ import random
 from src.files.files import Object, saveData
 
 if __name__ == "__main__":
-    print("Starte BallTrackerThread")
     global delta
 
     thread1 = ballTracker.BallTrackerThread()
     thread1.start()
 
-    print("Main running...")
     session = Pepper.init(ip, port)
     Pepper.roboInit(session)
-
     params = dict()
 
     for x in range(TRAINING_STEPS):
+        # Zufallswert fuer eine Bewegung.
         winkelToTrain1 = float("%.2f" % round(random.uniform(-1.0, 1.0), 2))
 
         rewardTMP = 0

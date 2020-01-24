@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
 # Choregraphe bezier export in Python.
 import qi
-import time
 import sys
 
 STORED_VALUES = dict()
