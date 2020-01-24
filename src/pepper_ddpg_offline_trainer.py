@@ -81,7 +81,7 @@ def trainFromDataset(sess, args, actor, critic, actor_noise, update_model, saver
             time.clock() - startTime) + "s")
         if i % int(args['save']) == 0 and i != 0:
             print('Saving model')
-            filename = args['model'] + "_" + i + "/model"
+            filename = args['model'] + "_" + str(i) + "/model"
             saver.save(sess, filename)
 
 
