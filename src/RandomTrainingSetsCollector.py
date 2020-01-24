@@ -1,3 +1,5 @@
+# Reines Sammeln von Trainingsdaten mit Hilfe von Zufallszahlen
+
 import readAngles
 import pepperMove
 import json
@@ -59,6 +61,15 @@ if __name__ == "__main__":
 
     for x in range(TRAINING_STEPS):
         winkelToTrain1 = random.uniform(UNTERE_GRENZE, OBERE_GRENZE)
+
+        rewardTMP = 0
+        if winkelToTrain1 <= UNTERE_GRENZE:
+            winkelToTrain1 = UNTERE_GRENZE
+            rewardTMP = -10000
+
+        if winkelToTrain1 >= OBERE_GRENZE:
+            winkelToTrain1 = OBERE_GRENZE
+            rewardTMP = -10000
 
         params["RShoulderPitch"] = [winkelToTrain1, TIME_TO_MOVE]
 

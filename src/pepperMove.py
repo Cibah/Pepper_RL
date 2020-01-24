@@ -76,7 +76,7 @@ def roboInit(session):
 
     params["LShoulderRoll"] = [0.10472, 0.96]
     params["RShoulderRoll"] = [-0.10472, 0.96]
-    params["HipPitch"] = [-0.119911, 0.96]
+    # params["HipPitch"] = [-0.185005, 0.96]
     move(params, service)
     try:
         raw_input("Initialization completed, press enter:\n")
