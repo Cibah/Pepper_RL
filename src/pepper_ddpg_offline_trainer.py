@@ -9,8 +9,7 @@ import tensorflow as tf
 import numpy as np
 
 from src.Settings import *
-from ddpg.ddpg import ActorNetwork, CriticNetwork, OrnsteinUhlenbeckActionNoise, ReplayBuffer
-from src.ddpg.ddpg import build_summaries
+from ddpg.ddpg import ActorNetwork, CriticNetwork, OrnsteinUhlenbeckActionNoise, ReplayBuffer, build_summaries
 
 
 def trainFromDataset(sess, args, actor, critic, actor_noise, update_model, saver):
