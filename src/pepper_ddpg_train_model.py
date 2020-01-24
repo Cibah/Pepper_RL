@@ -78,7 +78,7 @@ def train(sess, args, actor, critic, actor_noise, update_model, saver):
 
             s = s2
             ep_reward += r
-        print("Epoche: " + str(i) + "beendet")
+        print("Epoche: " + str(i) + "\t" + str(ep_reward / args['max_episode_len']) + " beendet")
         if i % int(args['save']) == 0 and i != 0:
             print('Saving model')
             saver.save(sess, args['model'])
