@@ -4,11 +4,11 @@ Pepper Train offline a Model with given training_sets.
 """
 import json
 import random
-
+import time
 import tensorflow as tf
 import numpy as np
 
-from src.Settings import *
+from Settings import *
 from ddpg.ddpg import ActorNetwork, CriticNetwork, OrnsteinUhlenbeckActionNoise, ReplayBuffer, build_summaries
 
 
@@ -32,7 +32,7 @@ def trainFromDataset(sess, args, actor, critic, actor_noise, update_model, saver
     for i in range(int(args['max_episodes'])):
         ep_reward = 0
         ep_ave_max_q = 0
-
+        startTime = time.clock()
         for j in range(int(args['max_episode_len'])):
 
             randomnumber = random.randint(0, len(datasets) - 1)
@@ -77,7 +77,8 @@ def trainFromDataset(sess, args, actor, critic, actor_noise, update_model, saver
                 critic.update_target_network()
 
             ep_reward += r
-        print("Episode: " + str(i) + "\t" + str(ep_reward / args['max_episode_len']) + "\tbeendet")
+        print("Episode: " + str(i) + "\t" + str(ep_reward / args['max_episode_len']) + "\tbeendet in\t" + str(
+            time.clock() - startTime) + "s")
         if i % int(args['save']) == 0 and i != 0:
             print('Saving model')
             saver.save(sess, args['model'] + "_" + i + "/model")
