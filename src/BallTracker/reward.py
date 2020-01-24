@@ -4,7 +4,6 @@
 #
 #
 import threading  # required for lock
-import time
 
 
 class Reward:
