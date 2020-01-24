@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Ausfuehren eines trainierten Models
+Ausführen eines trainierten Models
 """
 import tensorflow as tf
 import numpy as np
@@ -8,14 +8,12 @@ from ddpg.ddpg import build_summaries, getReward, ReplayBuffer, ActorNetwork, Cr
     OrnsteinUhlenbeckActionNoise
 from src.Pepper import Pepper
 from src.BallTracker import ballTracker
-from src.Pepper.Pepper import readAngles
+from src.Pepper.Pepper import readAngle
 from src.Settings import *
 
 
 def main():
     with tf.Session() as sess:
-        global delta
-
         thread1 = ballTracker.BallTrackerThread()
         thread1.start()
         session = Pepper.init(ip, port)
@@ -34,34 +32,30 @@ def main():
 
         saver = tf.train.Saver()
         saver.restore(sess, args['model'])
-        testDDPG(session, thread1, actor, critic, actor_noise)
-        print('Terminated')
+        runModel(session, thread1, actor, critic, actor_noise)
 
 
-def testDDPG(session, thread, actor, critic, actor_noise):
-    # test for max_episodes number of episodes
-    for i in range(int(args['max_episodes'])):
-
+def runModel(session, thread, actor, critic, actor_noise):
+    # run the model forever
+    while True:
         ep_reward = 0
         for j in range(int(args['max_episode_len'])):
             service = session.service("ALMotion")
             params = dict()
             # Hole Anfangszustand
             delta1 = thread.delta[0]
-            winkel1 = readAngles(session).get(args['motor'])
+            winkel1 = readAngle(session)
             s = [winkel1, delta1]
             a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
 
-            rewardTMP = 0
+            threshold_reward = 0
             if a[0] < UNTERE_GRENZE:
-                # print("Winkel zu klein :" + str(a[0]))
                 a[0] = UNTERE_GRENZE
-                rewardTMP = -1000
+                threshold_reward = -1000
 
             if a[0] > OBERE_GRENZE:
-                # print("Winkel zu gross :" + str(a[0]))
                 a[0] = OBERE_GRENZE
-                rewardTMP = -1000
+                threshold_reward = -1000
 
             # Fuehre Action aus
             params[args['motor']] = [a[0], TIME_TO_MOVE]
@@ -71,15 +65,10 @@ def testDDPG(session, thread, actor, critic, actor_noise):
             delta2 = thread.delta[0]
 
             # Hole Reward
-            r = getReward(delta2) + rewardTMP
-            terminal = False
-
+            r = getReward(delta2) + threshold_reward
             ep_reward += r
 
-            if terminal:
-                print('| Episode: {:d} | Reward: {:d} |'.format(i, int(ep_reward)))
-                break
-    print("Epoche: " + str(i) + "\t" + str(ep_reward / int(args['max_episode_len'])))
+    print("Episode: " + str(i) + "\t" + str(ep_reward / int(args['max_episode_len'])))
 
 
 if __name__ == '__main__':

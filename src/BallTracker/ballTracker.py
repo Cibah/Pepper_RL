@@ -40,23 +40,10 @@ class BallTrackerThread(threading.Thread):
 
         event = threading.Event()  # used to stop trackingThread
         myRewardTrackerThread = src.BallTracker.rewardTrackerThread.RewardTrackerThread(myReward, args, event)
-        # nicht mehr nötig
-        # trackingThread = threading.Thread(target= myRewardTracker.run ) # , daemon= True)
-        # trackingThread.start()
         myRewardTrackerThread.start()
 
         while self.exitFlag == 0:
-            # global delta
-            # neues Delta 1x ausgeben
             deltaTMP = myReward.getDeltaIfNew()
-            # print("Delta="+str(delta))
-            # Controller.delta = delta
-
             if deltaTMP is not None:
-                # global delta
-                # neues Delta 1x ausgeben
-                # print("Delta2=" + str(delta))
-                # Controller.delta = delta
                 self.delta = deltaTMP
-                # import this class # Rewards.updateRewards(delta)
             time.sleep(0.01)

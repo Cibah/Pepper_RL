@@ -2,43 +2,18 @@
 # Choregraphe bezier export in Python.
 import qi
 import sys
+from src.Settings import *
 
-STORED_VALUES = dict()
-MOTORS = ["LElbowRoll", "RElbowRoll", "LElbowYaw", "LWristYaw", "RWristYaw",
-          "RElbowYaw", "LShoulderPitch", "RShoulderPitch", "LShoulderRoll", "RShoulderRoll", "LHand", "RHand"]
 session = qi.Session()
 
 
 def init(ip, port):
     session.connect("tcp://" + ip + ":" + port)
     service = session.service("ALMotion")
-    # service.wakeUp()
-    # service.rest()
     life_service = session.service("ALAutonomousLife")
     life_service.setAutonomousAbilityEnabled("BackgroundMovement", False)
     service.wakeUp()
     return session
-
-
-def checkMovement(movements):
-    # Check if the new movement is correct with its values.
-    # Is the motor name correct?
-    # Whats the difference between the old and new value?
-    # Do not allow movements that are too strong
-    #
-    #print("Checking Movements")
-
-    for motor in movements:
-        #print(motor)
-        if motor not in MOTORS:
-            print("Error in check: Motor <" + motor + "> not found")
-            # return False
-        if motor in STORED_VALUES:
-            delta = abs(STORED_VALUES[motor][0] - movements[motor][0])
-            if delta >= 10:
-                print("Error in check: delta too high: " + delta)
-                return False
-    return True
 
 
 def move(movements, service):
@@ -51,28 +26,22 @@ def move(movements, service):
             keys.append(float(movements[parm][0]))
             # time is thee duration of the movement
             times.append(float(movements[parm][1]))
-
-            STORED_VALUES[parm] = [movements[parm][0], movements[parm][1]]
         service.angleInterpolation(names, keys, times, True)
         return 0  # No Reward at all
     except:
         print("FAILED: %s", sys.exc_info()[0])
 
 
-def readAngles(session):
-    MOTORS = ["RShoulderPitch"]
+def readAngle(session):
     service_mem = session.service("ALMemory")
-    angles = dict()
-    for motor in MOTORS:
-        link = "Device/SubDeviceList/" + motor + "/Position/Sensor/Value"
-        exp = service_mem.getData(link)
-        angles[motor] = exp
-    return angles
+    try:
+        return service_mem.getData("Device/SubDeviceList/" + args['motor'] + "/Position/Sensor/Value")
+    except:
+        print("Error getting angle from Pepper")
 
 
 def roboInit(session):
     service = session.service("ALMotion")
-
     params = dict()
 
     params["LShoulderPitch"] = [0.088, 0.96]
@@ -89,6 +58,7 @@ def roboInit(session):
     # params["HipPitch"] = [-0.185005, 0.96]
     move(params, service)
     try:
-        raw_input("Initialization completed, press enter:\n")
+        raw_input("Initialization completed, press enter to start:\n")
+        pass
     except:
         pass

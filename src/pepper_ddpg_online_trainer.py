@@ -11,7 +11,7 @@ from ddpg.ddpg import build_summaries, ActorNetwork, CriticNetwork, OrnsteinUhle
 
 from src.BallTracker import ballTracker
 from src.Pepper import Pepper
-from src.Pepper.Pepper import readAngles
+from src.Pepper.Pepper import readAngle
 from src.Settings import *
 
 
@@ -51,7 +51,7 @@ def train(sess, session, thread, args, actor, critic, actor_noise, update_model,
             params = dict()
             # Hole Anfangszustand
             delta1 = thread.delta[0]
-            winkel1 = readAngles(session).get(args['motor'])
+            winkel1 = readAngle(session)
             s = [winkel1, delta1]
 
             # Hole action
@@ -80,7 +80,7 @@ def train(sess, session, thread, args, actor, critic, actor_noise, update_model,
 
             # Hole Folgezustand
             delta2 = thread.delta[0]
-            winkel2 = readAngles(session).get(args['motor'])
+            winkel2 = readAngle(session)
             s2 = [winkel2, delta2]
 
             # Hole Reward

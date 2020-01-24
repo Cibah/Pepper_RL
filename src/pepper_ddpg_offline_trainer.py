@@ -3,6 +3,7 @@
 Pepper Train offline a Model with given training_sets.
 """
 import json
+import random
 
 import tensorflow as tf
 import numpy as np
@@ -12,7 +13,7 @@ from ddpg.ddpg import ActorNetwork, CriticNetwork, OrnsteinUhlenbeckActionNoise,
 from src.ddpg.ddpg import build_summaries
 
 
-def trainFromFile(sess, args, actor, critic, actor_noise, update_model, saver):
+def trainFromDataset(sess, args, actor, critic, actor_noise, update_model, saver):
     # Set up summary Ops
     summary_ops, summary_vars = build_summaries()
 
@@ -25,25 +26,24 @@ def trainFromFile(sess, args, actor, critic, actor_noise, update_model, saver):
     writer = tf.summary.FileWriter(args['summary_dir'], sess.graph)
     # Initialize replay memory
     replay_buffer = ReplayBuffer(int(args['buffer_size']), int(args['random_seed']))
+    file = open(TRAINING_FILE)
+    datasets = json.load(file)['steps']
+    file.close()
 
     for i in range(int(args['max_episodes'])):
         ep_reward = 0
         ep_ave_max_q = 0
 
         for j in range(int(args['max_episode_len'])):
-            with open(TRAINING_FILE) as json_file:
-                data = json.load(json_file)
-                q = data['steps']
-                p = q[j]
-                s = [p['az'], p['ad']]
-                a = p['actionR']
 
-                s2 = [p['fz'], p['fd']]
-                r = p['rw']
-                terminal = False
-                replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
-                                  terminal, np.reshape(s2, (actor.s_dim,)))
-
+            randomnumber = random.randint(0, len(datasets) - 1)
+            p = datasets[randomnumber]
+            s = [p['az'], p['ad']]
+            a = p['actionR']
+            s2 = [p['fz'], p['fd']]
+            r = p['rw']
+            replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
+                              False, np.reshape(s2, (actor.s_dim,)))
 
             # Keep adding experience to the memory until
             # there are at least minibatch size samples
@@ -77,18 +77,16 @@ def trainFromFile(sess, args, actor, critic, actor_noise, update_model, saver):
                 actor.update_target_network()
                 critic.update_target_network()
 
-            s = s2
             ep_reward += r
-        print("Epoche: " + str(i) + "\t" + str(ep_reward / args['max_episode_len']) + " beendet")
+        print("Episode: " + str(i) + "\t" + str(ep_reward / args['max_episode_len']) + "\tbeendet")
         if i % int(args['save']) == 0 and i != 0:
             print('Saving model')
             saver.save(sess, args['model'] + "/model")
 
 
 def main():
-    print("Lets go")
+    print("Doing Offline Training")
     with tf.Session() as sess:
-
         np.random.seed(int(args['random_seed']))
         tf.set_random_seed(int(args['random_seed']))
 
@@ -102,20 +100,9 @@ def main():
                                actor.get_num_trainable_vars())
         actor_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_dim))
 
-        print('The following MODE is detected: %s', args['mode'])
-        if args['mode'] == 'INIT':
-            saver = tf.train.Saver()
-            trainFromFile(sess, args, actor, critic, actor_noise, False, saver)
-        elif args['mode'] == 'TRAIN':
-            saver = tf.train.Saver()
-            saver.restore(sess, args['model'] + "/model")
-            trainFromFile(sess, args, actor, critic, actor_noise, True, saver)
-        elif args['mode'] == 'TEST':
-            saver = tf.train.Saver()
-            saver.restore(sess, args['model'] + "/model")
-            # testDDPG(sess, args, actor, critic, actor_noise)
-        else:
-            print('No mode defined!')
+        saver = tf.train.Saver()
+        trainFromDataset(sess, args, actor, critic, actor_noise, False, saver)
+
 
 if __name__ == '__main__':
     main()
