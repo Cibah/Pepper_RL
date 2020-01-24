@@ -1,44 +1,13 @@
 # Reines Sammeln von Trainingsdaten mit Hilfe von Zufallszahlen
 
-import readAngles
-import pepperMove
-import json
-import ballTracker
+from src.Pepper import Pepper
+from src.Pepper.Pepper import readAngles
+from src.Settings import *
+from src.ddpg.ddpg import getReward
+from src.BallTracker import ballTracker
 import random
 
-ip = "192.168.0.40"
-port = "9559"
-
-delta = ""
-
-
-class Object:
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
-
-
-def saveData(data):
-    f = open("HipTraining.txt", "a")
-    f.write(data)
-    f.close()
-
-
-def readData():
-    f = open("HipTraining.txt", "r")
-    print(f.read())
-
-
-def getReward(delta):
-    #print("Delta: " + str(delta))
-    delta = str(delta).replace("(", "")
-    delta = delta.replace(")", "")
-    var2_x = delta.partition(",")[0]
-    # print("TYPE: " + type(var1_x))
-    var2_x = (abs(int(var2_x)))
-    reward = 100 - (var2_x)
-    return reward
-
+from src.files.files import Object, saveData
 
 if __name__ == "__main__":
     print("Starte BallTrackerThread")
@@ -48,19 +17,13 @@ if __name__ == "__main__":
     thread1.start()
 
     print("Main running...")
-    session = pepperMove.init(ip, port)
-    pepperMove.roboInit(session)
+    session = Pepper.init(ip, port)
+    Pepper.roboInit(session)
 
-    # Winkel aus choreographe whlen
     params = dict()
 
-    TRAINING_STEPS = 50000
-    OBERE_GRENZE = 0.4
-    UNTERE_GRENZE = -0.35
-    TIME_TO_MOVE = 0.3
-
     for x in range(TRAINING_STEPS):
-        winkelToTrain1 = random.uniform(UNTERE_GRENZE, OBERE_GRENZE)
+        winkelToTrain1 = float("%.2f" % round(random.uniform(-1.0, 1.0), 2))
 
         rewardTMP = 0
         if winkelToTrain1 <= UNTERE_GRENZE:
@@ -71,18 +34,17 @@ if __name__ == "__main__":
             winkelToTrain1 = OBERE_GRENZE
             rewardTMP = -10000
 
-        params["RShoulderPitch"] = [winkelToTrain1, TIME_TO_MOVE]
-
+        params[args['motor']] = [winkelToTrain1, TIME_TO_MOVE]
         service = session.service("ALMotion")
-        print("Bewege Motor RShoulderPitch um " + str(winkelToTrain1))
+        print("Bewege Motor " + args['motor'] + " um " + str(winkelToTrain1))
         delta1 = thread1.delta[0]
-        winkel = readAngles.readAngles(session).get('RShoulderPitch')
+        winkel = readAngles(session).get(args['motor'])
 
-        pepperMove.move(params, service)
+        Pepper.move(params, service)
 
         delta = thread1.delta[0]
         delta2 = delta
-        winkel2 = readAngles.readAngles(session).get('RShoulderPitch')
+        winkel2 = readAngles(session).get(args['motor'])
         # print("rewards= " + str(delta1) + " - " + str(delta2))
         # rewards = int((int(delta) - int(delta2)))
         rewards = delta
@@ -96,11 +58,10 @@ if __name__ == "__main__":
         me.v = 0.0
         # float(float(delta2[0]) - float(delta[0]))/TIME_TO_MOVE
         # print(str(me.v))
-        me.rw = getReward(delta2)
+        me.rw = getReward(delta2) + rewardTMP
 
         exportData = me.toJSON()
         saveData(exportData)
-    #thread1.delta.exitFlag = 1
     print("Fertig")
     #thread1.join()
 exit()

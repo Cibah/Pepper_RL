@@ -13,7 +13,6 @@ import commentjson
 import cv2
 import imutils
 import time
-import reward
 import threading  # Parent Class
 import signal
 import os  # required to get PID to send signal to Main Thread, if Tracker closes

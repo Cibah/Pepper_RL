@@ -7,14 +7,8 @@ import argparse
 import warnings
 import time
 import threading
-import reward
-import rewardTrackerThread
-import sys  # used for exit()
-import signal  # to catch Ctrl-C Interrupt
-import socket
-
-
-# import Controller
+import src.BallTracker.reward
+import src.BallTracker.rewardTrackerThread
 
 
 class BallTrackerThread(threading.Thread):
@@ -28,7 +22,7 @@ class BallTrackerThread(threading.Thread):
         self.delta = input
 
     def run(self):
-        myReward = reward.Reward()
+        myReward = src.BallTracker.reward.Reward()
         # myReward.print()
         # signal.signal(signal.SIGINT, shutdown)
 
@@ -45,7 +39,7 @@ class BallTrackerThread(threading.Thread):
         warnings.filterwarnings("ignore")
 
         event = threading.Event()  # used to stop trackingThread
-        myRewardTrackerThread = rewardTrackerThread.RewardTrackerThread(myReward, args, event)
+        myRewardTrackerThread = src.BallTracker.rewardTrackerThread.RewardTrackerThread(myReward, args, event)
         # nicht mehr nötig
         # trackingThread = threading.Thread(target= myRewardTracker.run ) # , daemon= True)
         # trackingThread.start()
@@ -66,16 +60,3 @@ class BallTrackerThread(threading.Thread):
                 self.delta = deltaTMP
                 # import this class # Rewards.updateRewards(delta)
             time.sleep(0.01)
-
-# define little signal Handler to shutdown rewardTracker-Thread, when Main-Thread closes
-# def shutdown(sig, frame):
-#    print ("Closing...")
-#    event.set()
-#    # trackingThread.join()	# not requires because of event
-#    sys.exit(0)
-
-
-# def runBallTracker():
-
-# shutdown(signal.SIGINT, None)
-# Ende

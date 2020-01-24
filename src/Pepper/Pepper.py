@@ -51,13 +51,23 @@ def move(movements, service):
             keys.append(float(movements[parm][0]))
             # time is thee duration of the movement
             times.append(float(movements[parm][1]))
-            #print("Moving: " + parm + " with: " +
-            #      str(movements[parm][0]) + " in " + str(movements[parm][1]))
+
             STORED_VALUES[parm] = [movements[parm][0], movements[parm][1]]
         service.angleInterpolation(names, keys, times, True)
         return 0  # No Reward at all
     except:
         print("FAILED: %s", sys.exc_info()[0])
+
+
+def readAngles(session):
+    MOTORS = ["RShoulderPitch"]
+    service_mem = session.service("ALMemory")
+    angles = dict()
+    for motor in MOTORS:
+        link = "Device/SubDeviceList/" + motor + "/Position/Sensor/Value"
+        exp = service_mem.getData(link)
+        angles[motor] = exp
+    return angles
 
 
 def roboInit(session):
