@@ -23,3 +23,7 @@ Dadurch entsteht ein auf den gesammelten Daten trainiertes Modell.
 #pepper_ddpg_model_runner
 Das vorher trainierte Modell wird angewandt und erzeugt basierend auf dem aktuellen State (Motorstellung und Delta) eine Action
 um in einen möglichst guten Folgezustand zu kommen. 
+
+#Abhängigkeiten
+`pip install -I tensorflow==1.3.0 tflearn==0.3.2 numpy==1.16.6 commentjson==0.8.2`
+
