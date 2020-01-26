@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
+'''
 Ausführen eines trainierten Models
-"""
+'''
+
 import tensorflow as tf
 import numpy as np
 from ddpg.ddpg import build_summaries, getReward, ReplayBuffer, ActorNetwork, CriticNetwork, \
