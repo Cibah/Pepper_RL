@@ -13,6 +13,8 @@ Eine Webcam wird per USB an den Linux Computer angeschlossen (/dev/video1) und e
 Netzwerk befinden. Alle Einstellungen sind in der Settings.py vorzunehmen.
 
 ## pepper_ddpg_random_set_collector
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/-GzZ9BT48mU/0.jpg)](https://www.youtube.com/watch?v=-GzZ9BT48mU)
+
 Es werden dem Roboter Zufallszahlen gesendet um eine willkürliche Bewegung zu erzeugen. Dabei wird über die Kamera der aktuelle state
 beobachtet und die Informationen über den Anfangs- und Folgezustand sowie erhaltener Reward in eine Textdatei im json Format geschrieben.
 Dies ist die Grundlage für das Offline Lernen der gesammelten Daten in ein Modell.
