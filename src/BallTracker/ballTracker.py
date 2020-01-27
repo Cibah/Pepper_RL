@@ -9,6 +9,7 @@ import time
 import threading
 import src.BallTracker.reward
 import src.BallTracker.rewardTrackerThread
+from src.Settings import *
 
 
 class BallTrackerThread(threading.Thread):
@@ -29,11 +30,11 @@ class BallTrackerThread(threading.Thread):
         # construct the argument parse and parse the arguments
         ap = argparse.ArgumentParser()
         ap.add_argument("-v", "--video",
-                        help="path to the (optional) video file", default="/dev/video1")
+                        help="path to the (optional) video file", default=VIDEODEVICE)
         ap.add_argument("-b", "--buffer", type=int, default=64,
                         help="max buffer size")
         ap.add_argument("-c", "--conf",
-                        help="path to the JSON configuration file", default="conf.json")
+                        help="path to the JSON configuration file", default=BALLTRACKERCONFIG)
         args = vars(ap.parse_args())
         # filter warnings
         warnings.filterwarnings("ignore")

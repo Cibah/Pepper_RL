@@ -17,15 +17,17 @@ import threading  # Parent Class
 import signal
 import os  # required to get PID to send signal to Main Thread, if Tracker closes
 
+from src.Settings import BALLTRACKERCONFIG
 
-class RewardTrackerThread (threading.Thread):
+
+class RewardTrackerThread(threading.Thread):
     def __init__(self, reward, arguments, event):
         threading.Thread.__init__(self)  # call init of Parent-Class "Thread"
         self.event = event
         self.reward = reward
         self.arguments = arguments
 
-        self.conf = commentjson.load(open("./conf.json"))
+        self.conf = commentjson.load(open(BALLTRACKERCONFIG))
         # init Farbwerte von grosser Kugel und kleinem Ball
         # Achtung: Upper / Lower in HSV.Format!!
         self.color1 = eval(self.conf["color1"])

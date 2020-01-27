@@ -9,6 +9,8 @@ OBERE_GRENZE = 0.4
 UNTERE_GRENZE = -0.25
 TIME_TO_MOVE = 0.3
 TRAINING_FILE = "feedback.txt"
+VIDEODEVICE = "/dev/video1"
+BALLTRACKERCONFIG = "conf.json"
 
 delta = ""
 
