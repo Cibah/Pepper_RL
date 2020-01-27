@@ -36,8 +36,8 @@ def main():
         # TODO Loop over all generated models
         models = sorted(glob.glob(args['model'] + "*"))
         for model in models:
-            saver.restore(sess, model)
-            print(model + runModel(session, thread1, actor, critic, actor_noise))
+            saver.restore(sess, model + "/model")
+            print(model + "\t" + runModel(session, thread1, actor, critic, actor_noise))
 
 
 def runModel(session, thread, actor, critic, actor_noise):
@@ -69,7 +69,7 @@ def runModel(session, thread, actor, critic, actor_noise):
         delta2 = thread.delta[0]
 
         # Hole Reward
-        r = getReward(delta2, a[0]) + threshold_reward
+        r = getReward(delta2) + threshold_reward
         if (r > highestReward):
             highestReward = r
         if (r < lowestReward):

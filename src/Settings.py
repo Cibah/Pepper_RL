@@ -13,12 +13,12 @@ TRAINING_FILE = "feedback.txt"
 delta = ""
 
 args = dict()
-args['model'] = "feedback_2"
+args['model'] = "feedback_3"
 args['motor'] = "RShoulderPitch"
 args['summary_dir'] = "./results/tf_ddpg"
 args['buffer_size'] = 1000000
 args['random_seed'] = 1234
-args['max_episodes'] = 100
+args['max_episodes'] = 10000
 args['max_episode_len'] = 1000
 args['minibatch_size'] = 64
 args['actor_lr'] = 0.0001
