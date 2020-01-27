@@ -33,15 +33,19 @@ def main():
         actor_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_dim))
         saver = tf.train.Saver()
 
-        # TODO Loop over all generated models
         models = sorted(glob.glob(args['model'] + "*"))
+        print("Model\tLowest_Reward\tHighest_Reward\tAvg._Reward")
         for model in models:
             saver.restore(sess, model + "/model")
             print(model + "\t" + runModel(session, thread1, actor, critic, actor_noise))
 
+        session.close()
+        thread1.exitFlag = 1
+        thread1.join()
+
 
 def runModel(session, thread, actor, critic, actor_noise):
-    highestReward = 0
+    highestReward = -10000
     lowestReward = 0
     ep_reward = 0
     for j in range(int(args['max_episode_len'])):  # make this to 100 steps
