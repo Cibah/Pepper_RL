@@ -18,7 +18,7 @@ Dies ist die Grundlage für das Offline Lernen der gesammelten Daten in ein Mode
 
 #pepper_ddpg_offline_trainer
 Die gesammelten Zufallsbewegungen werden jetzt wieder in zufälliger Reihenfolge iterativ in einen replayBuffer geschrieben und miteinander kombiniert.
-Dadurch entsteht ein auf den gesammelten Daten trainiertes Modell.
+Dadurch entsteht ein auf den gesammel   ten Daten trainiertes Modell.
 
 #pepper_ddpg_model_runner
 Das vorher trainierte Modell wird angewandt und erzeugt basierend auf dem aktuellen State (Motorstellung und Delta) eine Action

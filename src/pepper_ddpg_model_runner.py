@@ -2,6 +2,7 @@
 '''
 Ausführen eines trainierten Models
 '''
+import glob
 
 import tensorflow as tf
 import numpy as np
@@ -33,8 +34,10 @@ def main():
         saver = tf.train.Saver()
 
         # TODO Loop over all generated models
-        saver.restore(sess, args['model'])
-        print(runModel(session, thread1, actor, critic, actor_noise))
+        models = sorted(glob.glob(args['model'] + "*"))
+        for model in models:
+            saver.restore(sess, model)
+            print(model + runModel(session, thread1, actor, critic, actor_noise))
 
 
 def runModel(session, thread, actor, critic, actor_noise):

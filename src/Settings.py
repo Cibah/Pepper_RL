@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-ip = "192.168.0.41"
+ip = "192.168.0.40"
 port = "9559"
 state_dim = 2  # env.observation_space.shape[0]
 action_dim = 1  # env.action_space.shape[0]
@@ -28,4 +28,4 @@ args['tau'] = 0.001
 args['env'] = 'Pendulum-v0'
 args['render_env'] = 0.001
 args['monitor_dir'] = './results/gym_ddpg'
-args['save'] = 250
+args['save'] = 200
