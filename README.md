@@ -23,6 +23,9 @@ Dies ist die Grundlage für das Offline Lernen der gesammelten Daten in ein Mode
 Die gesammelten Zufallsbewegungen werden jetzt wieder in zufälliger Reihenfolge iterativ in einen replayBuffer geschrieben und miteinander kombiniert.
 Dadurch entsteht ein auf den gesammelten Daten trainiertes Modell. Hierbei wird je nach Einstellung alle 250 Episoden das aktuelle Modell in einem eigenen Ordner gespeichert.
 
+## pepper_ddpg_online_trainer
+Trainiert ein Model von Anfang an mit Bewegungen am Roboter.
+
 ## pepper_ddpg_model_runner
 Das vorher trainierte Modell wird angewandt und erzeugt basierend auf dem aktuellen State (Motorstellung und Delta) eine Action
 um in einen möglichst guten Folgezustand zu kommen. Dafür werden die verschiedenen Modelle durch iteriert und deren Resultate ausgegeben.

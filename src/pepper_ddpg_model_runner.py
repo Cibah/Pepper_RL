@@ -6,7 +6,7 @@ import glob
 
 import tensorflow as tf
 import numpy as np
-from ddpg.ddpg import build_summaries, getReward, ReplayBuffer, ActorNetwork, CriticNetwork, \
+from ddpg.ddpg import getReward, ActorNetwork, \
     OrnsteinUhlenbeckActionNoise
 from src.Pepper import Pepper
 from src.BallTracker import ballTracker
@@ -25,30 +25,31 @@ def main():
                              float(args['actor_lr']), float(args['tau']),
                              int(args['minibatch_size']))
 
-        critic = CriticNetwork(sess, state_dim, action_dim,
-                               float(args['critic_lr']), float(args['tau']),
-                               float(args['gamma']),
-                               actor.get_num_trainable_vars())
+        # critic = CriticNetwork(sess, state_dim, action_dim,
+        #                       float(args['critic_lr']), float(args['tau']),
+        #                       float(args['gamma']),
+        #                       actor.get_num_trainable_vars())
 
         actor_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_dim))
         saver = tf.train.Saver()
 
         models = sorted(glob.glob(args['model'] + "*"))
-        print("Model\tLowest_Reward\tHighest_Reward\tAvg._Reward")
+        print("Model\t\tLowest_Reward\tHighest_Reward\tAvg._Reward")
         for model in models:
             saver.restore(sess, model + "/model")
-            print(model + "\t" + runModel(session, thread1, actor, critic, actor_noise))
+            print(model + "\t" + runModel(session, thread1, actor, actor_noise))
 
+        print("Finished")
         session.close()
         thread1.exitFlag = 1
         thread1.join()
 
 
-def runModel(session, thread, actor, critic, actor_noise):
+def runModel(session, thread, actor, actor_noise):
     highestReward = -10000
     lowestReward = 0
     ep_reward = 0
-    for j in range(int(args['max_episode_len'])):  # make this to 100 steps
+    for j in range(int(args['max_episode_test'])):
         service = session.service("ALMotion")
         params = dict()
         # Hole Anfangszustand
@@ -79,7 +80,7 @@ def runModel(session, thread, actor, critic, actor_noise):
         if (r < lowestReward):
             lowestReward = r
         ep_reward += r
-    return (str(lowestReward) + "\t" + str(highestReward) + "\t" + str(ep_reward / int(args['max_episode_len'])))
+    return (str(lowestReward) + "\t\t" + str(highestReward) + "\t\t" + str(ep_reward / int(args['max_episode_len'])))
 
 if __name__ == '__main__':
     main()

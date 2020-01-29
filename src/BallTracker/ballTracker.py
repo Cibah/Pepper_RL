@@ -48,3 +48,5 @@ class BallTrackerThread(threading.Thread):
             if deltaTMP is not None:
                 self.delta = deltaTMP
             time.sleep(0.01)
+        event.set()
+        myRewardTrackerThread.join()
