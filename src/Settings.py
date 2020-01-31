@@ -15,14 +15,14 @@ BALLTRACKERCONFIG = "conf.json"
 delta = ""
 
 args = dict()
-args['model'] = "feedback_3"
+args['model'] = "feedback_4"
 args['motor'] = "RShoulderPitch"
 args['summary_dir'] = "./results/tf_ddpg"
 args['buffer_size'] = 1000000
 args['random_seed'] = 1234
 args['max_episodes'] = 10000
 args['max_episode_len'] = 1000
-args['max_episode_test'] = 150
+args['max_episode_test'] = 1000
 args['minibatch_size'] = 64
 args['actor_lr'] = 0.0001
 args['critic_lr'] = 0.001

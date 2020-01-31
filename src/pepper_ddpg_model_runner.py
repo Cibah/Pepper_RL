@@ -60,11 +60,11 @@ def runModel(session, thread, actor, actor_noise):
         threshold_reward = 0
         if a[0] < UNTERE_GRENZE:
             a[0] = UNTERE_GRENZE
-            threshold_reward = -1000
+            threshold_reward = -10000
 
         if a[0] > OBERE_GRENZE:
             a[0] = OBERE_GRENZE
-            threshold_reward = -1000
+            threshold_reward = -10000
 
         # Fuehre Action aus
         params[args['motor']] = [a[0], TIME_TO_MOVE]

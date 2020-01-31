@@ -35,5 +35,5 @@ Erstellt ein Modell zum Vorhersagen der Folgezustände und Rewards basierend auf
 Dient der Evaluierung des mit Reinforcement Learning erstellten Modells.
 
 ## Abhängigkeiten
-`pip install -I tensorflow==1.3.0 tflearn==0.3.2 numpy==1.16.6 commentjson==0.8.2 qi==1.6.14`
+`pip install -I imutils opencv-python tensorflow==1.3.0 tflearn==0.3.2 numpy==1.16.6 commentjson==0.8.2 qi==1.6.14`
 

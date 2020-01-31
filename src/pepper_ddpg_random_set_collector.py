@@ -23,19 +23,19 @@ if __name__ == "__main__":
 
     for x in range(TRAINING_STEPS):
         # Zufallswert fuer eine Bewegung.
-        winkelToTrain1 = float("%.2f" % round(random.uniform(-1.0, 1.0), 2))
+        angleToTrain1 = float("%.2f" % round(random.uniform(-1.0, 1.0), 2))
 
         # Bewegung innerhalb der Grenzwerte? Wenn nicht: Strafe
         threshold_reward = 0
-        if winkelToTrain1 <= UNTERE_GRENZE:
-            winkelToTrain1 = UNTERE_GRENZE
+        if angleToTrain1 <= UNTERE_GRENZE:
+            angleToTrain1 = UNTERE_GRENZE
             threshold_reward = -10000
 
-        if winkelToTrain1 >= OBERE_GRENZE:
-            winkelToTrain1 = OBERE_GRENZE
+        if angleToTrain1 >= OBERE_GRENZE:
+            angleToTrain1 = OBERE_GRENZE
             threshold_reward = -10000
 
-        params[args['motor']] = [winkelToTrain1, TIME_TO_MOVE]
+        params[args['motor']] = [angleToTrain1, TIME_TO_MOVE]
         service = session.service("ALMotion")
 
         # Holfe Anfangszustand
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         me = Object()
         me.steps.az = winkel
         me.steps.ad = delta1
-        me.steps.actionR = winkelToTrain1
+        me.steps.actionR = angleToTrain1
         me.steps.fz = winkel2
         me.steps.fd = delta2
         me.steps.rw = getReward(delta2) + threshold_reward

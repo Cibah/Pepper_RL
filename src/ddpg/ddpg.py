@@ -6,12 +6,14 @@ import tflearn
 
 
 def getReward(delta):
-    delta = str(delta).replace("(", "")
-    delta = delta.replace(")", "")
-    var2_x = delta.partition(",")[0]
-    var2_x = (abs(int(var2_x)))
-    reward = 100 - (var2_x)
-    return reward
+    if isinstance(delta, np.ndarray):
+        return 100 - (delta[0])
+    else:
+        delta = str(delta).replace("(", "")
+        delta = delta.replace(")", "")
+        var2_x = delta.partition(",")[0]
+        var2_x = (abs(int(var2_x)))
+        return 100 - (var2_x)
 
 
 class ActorNetwork(object):
